@@ -1,0 +1,420 @@
+% This is FRBNY model file for IRIS toolbox (iristoolbox.codeplex.com)
+% FRBNY model is original Smets and Wouters 2007 model with BGG-type financial frictions.
+% Reference: Marco Del Negro, Frank Schorfheide, Chapter 2 - DSGE Model-Based Forecasting in Handbook of Economic Forecasting,
+% Graham Elliott and Allan Timmermann, Editor(s). Elsevier, 2013, Volume 2, Part A, Pages 57-140, ISSN 1574-0706, ISBN 9780444536839
+% http://dx.doi.org/10.1016/B978-0-444-53683-9.00002-5
+% Equations refer to section 7 and 8 of technical appendix:
+% http://sites.sas.upenn.edu/schorf/files/hb_forecasting_appendix.pdf
+
+!parameters
+'Income share of capital !! \alpha' alp = 0.1596
+'Depreciation rate !! \delta' del = .025
+'Convexity of investment adjustment costs !! S''' s2 = 2.7314
+'Habit persistence in consumption !! h' h = 0.5347
+'Utilization costs !! \psi' ppsi = 0.6862
+'Curvature of the disutility of labor !! \nu_l' nu_l = 2.5975
+'Discount rate of households !! \beta' bet = 1/(1+0.1402/100)
+'Relative risk aversion !! \sigma_{c}' sigmac = 0.8719
+'Steady state growth rate !! \gamma' gam = 0.3673/100
+'Trend in the relative price of capital !! \Upsilon' ups = 1
+'Government spending !! g^*' gstar = .18
+% Parameters of sticky prices and wages
+'Calvo parameter for prices !! \zeta_p' zeta_p = 0.894
+'Degree of backward indexation for prices !! \iota_p' iota_p = 0.1865
+'Curvature in the Kimball aggregator for prices (superelasticity of demand for intermediate goods) !! \eps_p' epsp = !if kimball; 10 !else 0 !end
+'Steady state price markup !! \Phi' Bigphi = 1.1066
+'Calvo parameter for wages !! \zeta_w' zeta_w = 0.9291
+'Degree of backward indexation for wages !! \iota_w' iota_w = 0.2992
+'Curvature in the Kimball aggregator for wages (superelasticity of demand for labor) !! \eps_w' epsw = !if kimball; 10 !else 0 !end
+'Steady state wage markup !! \mu^w_*' muwstar = 1.5
+'Degree of interest rate smoothing !! \rho' rho = 0.7126
+'Policy reaction to deviation of inflation from target !! \psi_1' psi1 = 1.3679
+'Policy reaction to output gap !! \psi_2' psi2 = 0.0388
+'Policy reaction to growth differences !! \psi_3' psi3 = 0.2464
+'Steady state spread !! spr_*'	sprd = (1+1.7444/100)^(1/4) % from annual perc to quarterly number
+!if bgg
+    % Financial Frictions Parameters
+    'Elasticity of spread to leverage !! \zeta_{sp,b}' zeta_spb = 0.0559
+    'Survival rate of entrepreneurs !! \gamma_*' gammstar = 0.99
+    'Default probability !! F(\omega)' Fom = 1-(1-.03)^(1/4) % from annualized to quarterly
+    ' !! \pi^*' pistar = 0.5
+    'Elasticity of spread to volatility of entrepreneural capital shock !! \zeta_{sp,sigw}' zeta_spsigw
+    'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
+!end
+% exogenous processes: autocorrelations
+'\rho_{g}' rho_g = 0.9863
+'\eta_{gz}' eta_gz = 0.84
+'\rho_{b}' rho_b = 0.941
+'\rho_{\mu}' rho_mu = 0.8735
+'\rho_{z}' rho_z = 0.9446
+'\rho_{z^p}' rho_zp = 0.891
+'\rho_{\lambda_f}' rho_laf = 0.8827
+'\eta_{\lambda_f}' eta_laf = 0.7892
+'\rho_{\lambda_w}' rho_law = 0.3884
+'\eta_{\lambda_w}' eta_law = 0.4226
+'\rho_{rm}' rho_rm = 0.2135
+'\rho_{pi}^*' rho_pist = 0.99
+!if bgg
+    '\rho_{sigw}' rho_sigw = 0.9898
+    '\rho_{mue}' rho_mue = 0.75
+    '\rho_{gamm}' rho_gamm = 0.75
+!end
+!if 0
+    % exogenous processes: standard deviations
+    '\sigma_{g}' sig_g = 2.5230
+    '\sigma_{b}' sig_b = 0.0292
+    '\sigma_{\mu}' sig_mu = 0.4559
+    '\sigma_{z}' sig_z = 0.6742
+    '\sigma_{z^p}' sig_zp = 0.1662
+    '\sigma_{\lambda_f}' sig_laf = 0.1314
+    '\sigma_{\lambda_w}' sig_law = 0.3864
+    '\sigma_{rm}' sig_rm = 0.2380
+    '\sigma_{pi}^*' sig_pist = 0.0269
+    !if bgg
+        '\sigma_{sigw}' sig_sigw = 0.0428
+        '\sigma_{mue}' sig_mue = 0
+        '\sigma_{gamm}' sig_gamm = 0
+    !end
+!end
+!if linear
+    rkstar,cstar,istar,kstar,kbarstar,Lstar,ystar
+    !if bgg
+        vstar,nstar,Gstar,muestar,vkstar,nkstar,zeta_Gsigw,zeta_Gw
+        Rhostar,zeta_zmue,zeta_zsigw,zeta_zw,
+        zeta_nRk,zeta_nR,zeta_nsigw,zeta_nmue,zeta_nqk,zeta_nn
+    !end
+!end
+% Dynamic links to parameters and steady-state values
+zstar,betbar
+!links
+' !! z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
+' !! \bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
+!transition_variables
+!for _s,_f !do
+    'Output !! y?' y?
+    'Consumption !! c?' c?
+    'Investment !! i?' i?
+    'Effective capital !! k?' k?
+    'Installed capital !! \bar{k}?' kbar?
+    'Real wage !! w?' w?
+    'Gross real return on capital for entrepreneurs !! \tilde{R}^k' rktil?
+    'Rental rate of capital !! r^k?' rk?
+    'Gross real interest rate !! r?' r?
+    'Price of capital !! q^k?' qk?
+    'Labor supply !! L?' L?
+    'Marginal Utility of Consumption !! \xi?' xi?
+    'Variable capacity utilization !! u?' u?
+    'Real marginal substitution !! \mu^w?' muw?
+    'Real marginal costs !! mc?' mc?
+    'Spread between returns on capital and gov bonds !! spr' spread?
+!end
+'Technology' z
+'Neutral Technology !! \tilde{z}' ztil
+'Long run changes to productivity !! z_p' zp
+'Government spending' g
+'Consumption wedge' b
+'Marginal efficiency of investment !! \mu' mu
+'Price mark-up !! \lambda_f' laf
+'Price mark-up shock' laf1
+'Wage mark-up !! \lambda_w' law
+'Wage mark-up shock' law1
+'Gross nominal interest rate on gov bonds' R
+'Inflation' pi
+!if ~linear
+    p1,p2,chi_p,w1,w2,chi_w
+!end
+'Time-varying inflation target !! \pi^*' pist
+'Monetary policy shock !! r^m' rm
+!if bgg
+    'Entrepreneurial net worth' n
+    'Shock to dispersion of entrepreneural abilities !! \sigma_w' sigw = 0.499364227649214
+    'Spread shock !! \mu_e' mue
+    'Net worth shock' gamm
+    !if ~linear
+        'Entrepreneurial equity' v
+        'Threshold level of entrepreneural capital shock !! \bar{\omega}' omegabar
+        Gamma,dGamma,G,dG,
+    !end
+!end
+!if ~linear
+    !log_variables
+    !all_but
+    z,ztil,zp,g,b,mu,rm,laf1,law1,pist
+!end
+!transition_shocks
+g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh
+!if bgg
+    sigw_sh,mue_sh,gamm_sh
+!end
+% !parameters
+% ' !! Lmean'	Lmean = -45.9364
+% Standard deviations of the anticipated policy shocks
+% !for$[1:20]$!do
+%     ' !! \sigma_{ant?}' sig_rm_ant? = !if ?<13; 0.2 !else 0 !end
+% !end
+% ' !! \rho_{tfp}' rho_tfp = 0.1953
+% ' !! \sigma_{tfp}' sig_tfp = 0.9391
+% ' !! \rho_{gdpdef}' rho_gdpdef = 0.5379
+% ' !! \sigma_{gdpdef}' sig_gdpdef = 0.1575
+% ' !! \Gamma_{gdpdef}' gamm_gdpdef = 1.0354
+% ' !! \delta_{gdpdef}' del_gdpdef = 0.0181
+% ' !! \rho_{pce}' rho_pce = 0.2320
+% ' !! \sigma_{pce}' sig_pce = 0.0999
+% ' !! \rho_{lr}' rho_lr = 0.6936
+% ' !! \sigma_{lr}' sig_lr = 0.1766
+% !transition_shocks
+% tfp_sh,gdpdef_sh,pce_sh,lr_sh
+
+%%%%%%%%%%%%%%%%%%%%%%%% Equilibrium conditions %%%%%%%%%%%%%%%%%%%%%%%%
+!transition_equations
+!for _s,_f !do
+    'Marginal Utility of Consumption !! muc?'
+    !if linear
+        xi? = r?+b+xi?{1}-sigmac*z{1}; % 8.89
+    !else
+        xi? = bet*exp(-sigmac*z{1})*xi?{1}*r?*exp(b) !! r? = exp(sigmac*z)/bet; % 8.49,8.52
+    !end
+    'Consumption Euler Equation !! euler?'
+    !if linear
+        xi? = -sigmac/(1-h*exp(-zstar))*(c?-h*exp(-zstar)*(c?{-1}-z))+(sigmac-1)*Lstar^(1+nu_l)*L?; % 8.90-
+    !else
+        xi? = (c?-h*c?{-1}*exp(-z))^-sigmac*exp((sigmac-1)/(1+nu_l)*L?^(1+nu_l)); % 8.48,8.51
+    !end
+    'Investment Euler Equation !! inv?'
+    !if linear
+        qk? = s2*exp(2*zstar)*((1+betbar)*(i?-mu)-i?{-1}+z-betbar*(i?{1}+z{1})); % 8.94
+    !else
+        qk?*exp(s2*exp(2*$z)*(1+betbar)*mu)*(1-s2/2*(i?/i?{-1}*exp(z)-exp($z))^2-s2*(i?/i?{-1}*exp(z)-exp($z))*i?/i?{-1}*exp(z))
+          =1-bet*exp(-sigmac*z{1})*qk?{1}*xi?{1}/xi?*exp(s2*exp(2*$z)*(1+betbar)*mu{1})
+          *s2*(i?{1}/i?*exp(z{1})-exp($z))*(i?{1}/i?*exp(z{1}))^2 !! qk? = 1; % 8.58,8.61
+    !end
+    'Evolution of Capital !! capev?'
+    !if linear
+        kbar? = (1-istar/kbarstar)*(kbar?{-1}-z) + istar/kbarstar*i? + istar/kbarstar*s2*exp(2*zstar)*(1+betbar)*mu; % 8.100
+    !else
+        kbar? = (1-del)*kbar?{-1}/ups*exp(-z)+exp(s2*exp(2*$z)*(1+betbar)*mu)*(1-s2/2*(i?/i?{-1}*exp(z)-exp($z))^2)*i? !! i? = (1-(1-del)/ups*exp(-z))*kbar?; % 8.55,8.57
+    !end
+    'Return to Capital !! capval?'
+    !if linear
+        rktil? = (rkstar*rk?+(1-del)*qk?)/(rkstar+1-del) - qk?{-1}; % 7.52
+    !else
+        rktil? = (rk?*u?+(1-del)*qk?-$rk?*(ppsi/(1-ppsi)*(u?-1)^2/2+u?-1))/qk?{-1}/ups !! rk? = rktil?*ups-1+del; % 7.15,7.38
+    !end
+    'Effective capital rented to firms !! capsrv?'
+    !if linear
+        k? = u? - z + kbar?{-1}; % 8.98
+    !else
+        k? = u?/ups*exp(-z)*kbar?{-1} !! kbar? = k?*exp(z)*ups; % 8.54,8.56
+    !end
+    'Capital Utilization !! caputl?'
+    !if linear
+        u? = (1-ppsi)/ppsi*rk?; % 8.99
+    !else
+        rk? = $rk?*(ppsi/(1-ppsi)*(u?-1)+1) !! u? = 1; % 8.60,8.63
+    !end
+    'Price Markup !! mkupp?'
+    !if linear
+        mc? = w? + alp*(L?-k?); % 8.102
+    !else
+        w? = (1-alp)*(mc?*(alp/rk?)^alp)^(1/(1-alp)); % 8.39,8.40
+    !end
+    'Rental Rate of Capital !! caprnt?'
+    !if linear
+        k? = w? - rk? + L?; % 8.104
+    !else
+        k? = alp/(1-alp)*w?/rk?*L?; % 8.46,8.47
+    !end
+    'Aggregate Production Function !! output?'
+    !if linear
+        y? =  Bigphi*(alp*k?+(1-alp)*L?); % 8.97
+    !else
+        y? = k?^alp*L?^(1-alp)-(Bigphi-1)*$y? !! y? = k?^alp*L?^(1-alp)/Bigphi; % 8.70,8.76
+    !end
+    'Resource Constraint !! res?'
+    !if linear
+        y? = ( cstar*c? + istar*i? + rkstar*kstar*u? )/ystar + gstar*g; % 8.88
+    !else
+        y? = c?+i?+(ppsi/(1-ppsi)*(u?-1)^2/2+u?-1)/u?*$rk?*k?+$y?*gstar*exp(g) !! c? = (1-gstar)*y?-i?; % 8.69,8.75
+    !end
+    'Marginal rate of substitution between consumption and labor !! msub?'
+    !if linear
+        w? = (c?-h*exp(-zstar)*(c?{-1}-z))/(1-h*exp(-zstar)) + nu_l*L? + muw?; % 8.105
+    !else
+        w? = (c?-h*c?{-1}*exp(-z))*L?^nu_l*muw? !! L? = (w?/muw?/((1-gstar)*(alp/(1-alp)*w?/rk?)^alp/Bigphi-(exp(z)-(1-del)/ups)*ups*alp/(1-alp)*w?/rk?)/(1-h*exp(-z)))^(1/(1+nu_l)); % 8.50,8.53
+    !end
+    'Capital Euler Equation !! capeu?'
+    !if linear
+        spread? = rktil?{1}-r?-b; % 8.95,7.50
+    !else
+        spread? = rktil?{1}/r?/exp(b) !! rktil? = sprd*r?; % 8.59,8.62
+    !end
+!end % for loop
+% Flexible economy
+!if linear
+    mc_f = 0;
+    muw_f = 0;
+    spread_f = 0;
+!else
+    mc_f = 1/Bigphi;
+    muw_f = muwstar;
+    spread_f = sprd;  % note: spread_f > 1
+!end
+% Sticky prices and wages
+'Phillips Curve !! phlps'
+!if linear
+    pi = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*mc_s
+     + iota_p*pi{-1} + betbar*pi{1} )/(1+iota_p*betbar) + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*laf; % 8.103
+!else
+    !if kimball
+        %TO DO: Kimball aggregator for prices
+    !else
+        % Dixit-Stiglitz CES aggregator for prices
+        1 = (1-zeta_p)*(p2/p1)^(1/$laf)+zeta_p/chi_p^(1/$laf) !! p1=p2; % 8.43,8.44
+        p1 = xi_s*y_s*mc_s*(1+1/laf)+zeta_p*bet*exp((1-sigmac)*z{1})*p1{1}/chi_p{1}^(1+1/$laf) !! mc_s=1/Bigphi; % 8.41,8.42
+        p2 = xi_s*y_s/laf+zeta_p*bet*exp((1-sigmac)*z{1})*p2{1}/chi_p{1}^(1/$laf) !! p2=xi_s*y_s/laf/(1-zeta_p*betbar);
+        chi_p = (pi{-1}/$pi)^iota_p*$pi/pi !! chi_p = 1;
+    !end
+!end
+'Evolution of Wages !! wage'
+!if linear
+    w_s = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-muw_s
+%      - (1+iota_w*betbar)*pi + (w_s{-1}+iota_w*pi{-1}-z)  % BUG in MDN
+     - (1+iota_w*betbar)*(pi+z) + (w_s{-1}+iota_w*(pi{-1}+z{-1}))
+     + betbar*(w_s{1}+z{1}+pi{1}) )/(1+betbar) + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*law; % 8.106
+!else
+    !if kimball
+        %TO DO: Kimball aggregator for wages
+    !else
+        % Dixit-Stiglitz CES aggregator for wages
+        1 = (1-zeta_w)*(w_s*w2/w1)^(1/$law)+zeta_w*(w_s/w_s{-1}/chi_w)^(1/$law) !! w1=w2*w_s; % 8.65,8.67
+        w1 = xi_s*L_s*w_s^(2+1/$law)/muw_s*(1+1/law)+zeta_w*bet*exp((1-sigmac)*z{1})*w1{1}/chi_w{1}^(1+1/$law) !! muw_s=muwstar; % 8.64,8.66
+        w2 = xi_s*L_s*w_s^(1+1/$law)/law+zeta_w*bet*exp((1-sigmac)*z{1})*w2{1}/chi_w{1}^(1/$law) !! w2=xi_s*L_s*w_s^(1+1/law)/law/(1-zeta_w*betbar);
+        chi_w = (pi{-1}/$pi*exp(z{-1}-$z))^iota_w*$pi/pi*exp($z-z) !! chi_w = 1;
+    !end
+!end
+'Monetary Policy Rule !! mp'
+!if linear
+    R = rho*R{-1} + (1-rho)*(psi1*(pi-pist)+psi2*(y_s-y_f)) + psi3*diff(y_s-y_f) + rm; % 8.103
+!else
+    R/$R = (R{-1}/$R)^rho * ( (pi/$pi/exp(pist))^psi1 * (y_s/y_f)^psi2 )^(1-rho) * (y_s/y_s{-1}*y_f{-1}/y_f)^psi3 * exp(rm) !! pi = 1.02; % 8.22
+!end
+'Nominal interest rate !! R'
+!if linear
+    R = r_s + pi{1};
+!else
+    R = r_s * pi{1};
+!end
+%% Exogenous Processes
+'Neutral Technology !! eq_z'
+!if linear
+    z = diff(ztil)/(1-alp) + zp; % 8.36
+!else
+    z-$z = diff(ztil)/(1-alp) + zp !! z = zstar; % 8.36
+!end
+'Linearly detrended log productivity process !! eq_ztil'
+ztil = rho_z*ztil{-1} + z_sh !! ztil = 0; % 8.2
+'Extra term for long run changes to productivity; added by MDC  !! eq_zp'
+zp = rho_zp*zp{-1} + zp_sh !! zp = 0;
+'Government spending !! eq_g'
+g = rho_g*g{-1} + g_sh + eta_gz*z_sh !! g = 0; % 8.29
+'Asset shock !! eq_b'
+b = rho_b*b{-1} + b_sh*(-sigmac*(1+h*exp(-zstar))/(1-h*exp(-zstar))) !! b = 0; % 8.30
+'Investment specific technology !! eq_mu'
+mu = rho_mu*mu{-1} + mu_sh !! mu = 0; % 8.31
+'Monetary policy shock !! eq_rm'
+rm = rho_rm*rm{-1} + rm_sh !! rm = 0; % 8.32
+'Price mark-up shock !! eq_laf'
+!if linear
+    laf = rho_laf*laf{-1} + laf1 - eta_laf*laf1{-1} !! laf = 0; % 8.33
+!else
+    laf = laf{-1}^rho_laf*$laf^(1-rho_laf)*exp(laf1-eta_laf*laf1{-1}) !! laf = Bigphi-1; % 8.33
+!end
+laf1 = laf_sh/((1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi));
+'Wage mark-up shock !! eq_law' % eq 15++
+!if linear
+    law = rho_law*law{-1} + law1 - eta_law*law1{-1} !! law = 0; % 8.34
+!else
+    law = law{-1}^rho_law*$law^(1-rho_law)*exp(law1-eta_law*law1{-1}) !! law = muwstar-1; % 8.33
+!end
+law1 = law_sh/((1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar));
+'Long term inflation expectations !! eq_pist'
+pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
+%% FINANCIAL FRICTIONS:
+'Spreads !! spread'
+!if ~bgg
+    % assume no financial frictions
+    !if linear
+        spread_s = 0;
+    !else
+        spread_s = sprd;
+    !end
+!else
+    !if linear
+        spread_s = zeta_spb*(qk_s+kbar_s-n) + zeta_spsigw*sigw + zeta_spmue*mue; % 7.50
+    !else
+        mue = (1-1/spread_s)/(dG{1}/dGamma{1}*(1-Gamma{1})+G{1}); % 7.9,7.33
+    !end
+    'Zero-profit condition !! zp'
+    !if linear
+%         0=rktil_s-r_s{-1}-b{-1}+zeta_zw*omegabar+zeta_zsigw*sigw{-1}+zeta_zmue*mue{-1}+(n{-1}-qk_s{-1}-kbar_s{-1})/Rhostar; % 7.40
+    !else
+        (Gamma-mue{-1}*G)*rktil_s/r_s{-1}/exp(b{-1}) = 1-n{-1}/qk_s{-1}/kbar_s{-1} !! n = (1-sprd*(Gamma-mue*G))*kbar_s; % 7.18,7.24
+        Gamma = omegabar*dGamma+G;
+        dGamma = 1-normcdf(log(omegabar)/sigw{-1}+sigw{-1}/2) !! dGamma = 1-Fom;
+        G = normcdf(log(omegabar)/sigw{-1}-sigw{-1}/2);
+        dG = normpdf(log(omegabar)/sigw{-1}+sigw{-1}/2)/sigw{-1};
+    !end
+    'Evolution of Net Worth !! nevol'
+    !if linear
+        n = zeta_nRk*rktil_s -
+            zeta_nR*(r_s{-1}+b{-1})  % BUG in MDN: shock not normalized
+             + zeta_nqk*(qk_s{-1}+kbar_s{-1}) + zeta_nn*n{-1}
+             + gammstar*vstar/nstar*gamm - gammstar*vstar/nstar*z
+             - zeta_nmue*mue{-1} - zeta_nsigw*sigw{-1}; % 7.51
+%         betbar*vkstar*(v+z) = (nkstar-1)*(r_s{-1}+b{-1})+nkstar*n{-1}+(sprd*(1-muestar*Gstar)-1)*(qk_s{-1}+kbar_s{-1}+rktil_s)+rktil_s-sprd*muestar*Gstar*(mue{-1}+zeta_Gw*omegabar+zeta_Gsigw*sigw{-1}); % 7.44
+%         n = gammstar*vstar/nstar*(gamm+v);
+    !else
+        v*exp(z) = ((1-mue{-1}*G)*rktil_s-(1-n{-1}/qk_s{-1}/kbar_s{-1})*r_s{-1}*exp(b{-1}))*qk_s{-1}*kbar_s{-1} !! v = sprd/betbar*kbar_s*(1-Gamma); % 7.19,7.24,7.25
+        n-gamm*v = $n-$gamm*$v !! spread_s = sprd;
+    !end
+    'sigw shock !! eq_sigw'
+    !if linear
+        sigw = rho_sigw*sigw{-1} + sigw_sh/zeta_spsigw;
+    !else
+        sigw = sigw{-1}^rho_sigw*$sigw^(1-rho_sigw)*exp(sigw_sh/zeta_spsigw) !! sigw = solve_sigw(Fom,sprd,zeta_spb);
+    !end
+    'mue shock !! eq_mue'
+    !if linear
+        mue = rho_mue*mue{-1} + mue_sh/zeta_spmue;
+    !else
+        mue = mue{-1}^rho_mue*$mue^(1-rho_mue)*exp(mue_sh/zeta_spmue) !! omegabar = exp(sigw*(norminv(Fom)-sigw/2));
+    !end
+    'gamm shock !! eq_gamm'
+    !if linear
+        gamm = rho_gamm*gamm{-1} + gamm_sh/gammstar*nstar/vstar;
+    !else
+        gamm = gamm{-1}^rho_gamm*$gamm^(1-rho_gamm)*exp(gamm_sh/$gamm*$n/$v) !! gamm = gammstar;
+    !end
+!end % if bgg
+!reporting_equations
+'Annual inflation !! pi_a'
+pi_a = movsum(pi,4);
+
+% Given elasticity of the spread w.r.t. leverage, solve for sigmaomegastar
+!if ~linear && ~exist('solve_sigw.m')
+    !export(solve_sigw.m)
+function s = solve_sigw(Fom,sprd,zeta_spb)
+s = fzero(@zetaspbfcn,0.5,optimset('Display','off'));
+    function f=zetaspbfcn(sigw)
+        zw=norminv(Fom);
+        G=normcdf(zw-sigw);
+        dG=normpdf(zw)/sigw;
+        dGamma=1-Fom;
+        Gamma=exp(sigw*(zw-sigw/2))*dGamma+G;
+        mue=(1-1/sprd)/(dG/dGamma*(1-Gamma)+G);
+        sg=sprd*(Gamma-mue*G);
+        f = (1-1/sg)/((dGamma/dG-mue)/sg/mue/(1-Gamma)*(Gamma-G)/(zw/sigw-dG/dGamma)-1)-zeta_spb;
+    end
+end
+    !end
+!end

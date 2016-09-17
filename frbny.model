@@ -168,13 +168,13 @@ g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh
 %%%%%%%%%%%%%%%%%%%%%%%% Equilibrium conditions %%%%%%%%%%%%%%%%%%%%%%%%
 !transition_equations
 !for _s,_f !do
-    'Marginal Utility of Consumption !! muc?'
+    'Consumption Euler Equation !! euler?'
     !if linear
         xi? = r?+b+xi?{1}-sigmac*z{1}; % 8.89
     !else
         xi? = bet*exp(-sigmac*z{1})*xi?{1}*r?*exp(b) !! r? = exp(sigmac*z)/bet; % 8.49,8.52
     !end
-    'Consumption Euler Equation !! euler?'
+    'Marginal Utility of Consumption !! muc?'
     !if linear
         xi? = -sigmac/(1-h*exp(-zstar))*(c?-h*exp(-zstar)*(c?{-1}-z))+(sigmac-1)*Lstar^(1+nu_l)*L?; % 8.90-
     !else

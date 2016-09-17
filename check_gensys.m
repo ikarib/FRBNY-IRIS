@@ -1,3 +1,5 @@
+% solves and simulates the linear model in IRIS using shocks from irf.mat and checks for replication of impulse responses
+
 clear; clc; close all
 o=struct; o.kimball=true; o.bgg=true;
 m = model('frbny.model','assign=',o,'linear=',true);

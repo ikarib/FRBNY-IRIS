@@ -1,6 +1,8 @@
 # FRBNY-IRIS
 FRBNY model in IRIS
 
+https://iristoolbox.codeplex.com/
+
 frbny.model is the model file for IRIS toolbox. It initializes all parameters, lists endogenous variables and exogenous shocks in FRBNY model's linear and nonlinear equations.
 
 main.m - checks for log-linearization of nonlinear model by comparing state space matrices

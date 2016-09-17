@@ -1,4 +1,4 @@
-% for shock={'g_sh','b_sh','mu_sh','z_sh','zp_sh','laf_sh','law_sh','rm_sh','pist_sh','sigw_sh','mue_sh','gamm_sh'}
+% run this file after gensys in dsgesolv.m (line 105)
 T=20;
 z=zeros(nex,T);
 z([g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh,sigw_sh,mue_sh,gamm_sh],:)=randn(12,T);
@@ -33,4 +33,3 @@ for v={'g_sh','b_sh','mu_sh','z_sh','zp_sh','laf_sh','law_sh','rm_sh','pist_sh',
     s.(v{1})=tseries(0:T,[0 z(eval(v{1}),:)]);
 end
 save irf s
-% end

@@ -1,5 +1,5 @@
 clear; clc; close all
-o=struct; o.kimball=false; o.bgg=true;
+o=struct; o.kimball=true; o.bgg=true;
 m = model('frbny.model','assign=',o,'linear=',true);
 m=steady_state(m,o.bgg);
 m=solve(m);
@@ -18,7 +18,7 @@ for j=1:length(v)
     e(j) = max(abs(s.(v{j})-s_.(v{j})));
 end
 [e,j]=sort(e,'descend');
-fprintf('%s : ',shock{1});
+fprintf('Differences in IRFs (in log10, largest first):\n',shock{1});
 for k=find(e>0)
     fprintf(' %s %g,',v{j(k)},log10(e(k)));
 end
@@ -30,7 +30,7 @@ e=eval(['[' sprintf('s.%s ',List{3}{:}) ']']);
 z=x*A'+x{-1}*B'+C'+e*D';
 eq=get(m,'xEqtn');
 er=max(abs(z.data));
-for i=find(er>2e-11)
+for i=find(er>1e-10)
     fprintf('%g : %s\n',er(i),eq{i})
 end
 % addpath('..\DSGE-2015-Apr\dsgesolv')

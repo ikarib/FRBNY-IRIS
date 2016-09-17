@@ -7,11 +7,12 @@ m=sstate(m);
 chksstate(m);
 %% check impulse responses
 t=0:20;
-for shock={'pist_sh'};%{'g_sh','b_sh','mu_sh','z_sh','zp_sh','laf_sh','law_sh','rm_sh','pist_sh','sigw_sh','mue_sh','gamm_sh'}
+load irf
 d=zerodb(m,t);
-d.(shock{1})(1)=0.01;
+for shock={'g_sh','b_sh','mu_sh','z_sh','zp_sh','laf_sh','law_sh','rm_sh','pist_sh','sigw_sh','mue_sh','gamm_sh'}
+    d.(shock{1})=s.(shock{1});
+end
 s_=simulate(m,d,t,'deviations=',true,'anticipate=',false);
-load(['..\DSGE-2015-Apr\irf_' shock{1}],'s');
 v=get(m,'xList'); e=zeros(size(v));
 for j=1:length(v)
     e(j) = max(abs(s.(v{j})-s_.(v{j})));
@@ -29,9 +30,8 @@ e=eval(['[' sprintf('s.%s ',List{3}{:}) ']']);
 z=x*A'+x{-1}*B'+C'+e*D';
 eq=get(m,'xEqtn');
 er=max(abs(z.data));
-for i=find(er>105*eps)
-    fprintf('%s : %g : %s\n',shock{1},er(i),eq{i})
+for i=find(er>2e-11)
+    fprintf('%g : %s\n',er(i),eq{i})
 end
-end
-addpath('..\DSGE-2015-Apr\dsgesolv')
-solve_gensys(m)
+% addpath('..\DSGE-2015-Apr\dsgesolv')
+% solve_gensys(m)

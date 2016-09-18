@@ -24,7 +24,7 @@ for k=find(e>0)
     fprintf(' %s %g,',v{j(k)},log10(e(k)));
 end
 fprintf('\n')
-dbplot(s&s_,get(m,'xList'),t,'maxPerFigure=',50); ftitle(shock{1},'Interpreter','none'); legend('gensys','IRIS')
+dbplot(s&s_,get(m,'xList'),t,'maxPerFigure=',50); legend('gensys','IRIS')
 [A,B,C,D,F,G,H,J,List,Nf] = system(m);
 x=eval(['[' sprintf('s.%s ',List{2}{:}) ']']);
 e=eval(['[' sprintf('s.%s ',List{3}{:}) ']']);

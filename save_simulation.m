@@ -1,4 +1,4 @@
-% run this file after gensys in dsgesolv.m ("keyboard on line 105)
+% run this file after gensys in dsgesolv.m (keyboard on line 105)
 T=20;
 z=zeros(nex,T);
 z([g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh,sigw_sh,mue_sh,gamm_sh],:)=randn(12,T);

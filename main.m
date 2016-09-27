@@ -1,6 +1,6 @@
 % this program will check loglinearization of FRBNY model
 clear; clc; close all
-o=struct; o.kimball=false; o.bgg=true;
+o=struct; o.kimball=false; o.bgg=true; o.nant=0;
 m1 = model('frbny.model','assign=',o,'linear=',true);
 m2 = model('frbny.model','assign=',o,'linear=',false);
 m1=steady_state(m1,o.bgg);

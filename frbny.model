@@ -1,10 +1,10 @@
-% This is FRBNY model file for IRIS toolbox (iristoolbox.codeplex.com)
-% FRBNY model is original Smets and Wouters 2007 model with BGG-type financial frictions.
+%% FRBNY model (original Smets and Wouters 2007 model with BGG-type financial frictions)
 % Reference: Marco Del Negro, Frank Schorfheide, Chapter 2 - DSGE Model-Based Forecasting in Handbook of Economic Forecasting,
 % Graham Elliott and Allan Timmermann, Editor(s). Elsevier, 2013, Volume 2, Part A, Pages 57-140, ISSN 1574-0706, ISBN 9780444536839
 % http://dx.doi.org/10.1016/B978-0-444-53683-9.00002-5
 % Equations refer to section 7 and 8 of technical appendix:
 % http://sites.sas.upenn.edu/schorf/files/hb_forecasting_appendix.pdf
+% This is a model file for IRIS toolbox (iristoolbox.codeplex.com)
 
 !parameters
 'Income share of capital !! \alpha' alp = 0.1596
@@ -39,7 +39,7 @@
     'Default probability !! F(\omega)' Fom = 1-(1-.03)^(1/4) % from annualized to quarterly
     'Elasticity of spread to volatility of entrepreneural capital shock !! \zeta_{sp,sigw}' zeta_spsigw
     'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
-    'Steady state price level !! \pi^*' pistar = 0.5
+    'Steady state price level !! \pi^*' pistar = 1.005
 !end
 % exogenous processes: autocorrelations
 '\rho_{g}' rho_g = 0.9863
@@ -59,22 +59,36 @@
     '\rho_{mue}' rho_mue = 0.75
     '\rho_{gamm}' rho_gamm = 0.75
 !end
-!if 0
-    % exogenous processes: standard deviations
-    '\sigma_{g}' sig_g = 2.5230
-    '\sigma_{b}' sig_b = 0.0292
-    '\sigma_{\mu}' sig_mu = 0.4559
-    '\sigma_{z}' sig_z = 0.6742
-    '\sigma_{z^p}' sig_zp = 0.1662
-    '\sigma_{\lambda_f}' sig_laf = 0.1314
-    '\sigma_{\lambda_w}' sig_law = 0.3864
-    '\sigma_{rm}' sig_rm = 0.2380
-    '\sigma_{pi}^*' sig_pist = 0.0269
-    !if bgg
-        '\sigma_{sigw}' sig_sigw = 0.0428
-        '\sigma_{mue}' sig_mue = 0
-        '\sigma_{gamm}' sig_gamm = 0
-    !end
+'Mean of hours !! \bar{L}'	Lmean = -45.9364
+'i_{\alpha}^{model}' modelalp_ind = 0
+'\Gamma_{gdpdef}' gamm_gdpdef = 1.0354
+'\delta_{gdpdef}' del_gdpdef = 0.0181
+'\rho_{lr}' rho_lr = 0.6936
+'\rho_{tfp}' rho_tfp = 0.1953
+'\rho_{gdpdef}' rho_gdpdef = 0.5379
+'\rho_{pce}' rho_pce = 0.2320
+% exogenous processes: standard deviations
+'\sigma_{g}' std_g_sh = 2.5230
+'\sigma_{b}' std_b_sh = 0.0292
+'\sigma_{\mu}' std_mu_sh = 0.4559
+'\sigma_{z}' std_z_sh = 0.6742
+'\sigma_{z^p}' std_zp_sh = 0.1662
+'\sigma_{\lambda_f}' std_laf_sh = 0.1314
+'\sigma_{\lambda_w}' std_law_sh = 0.3864
+'\sigma_{rm}' std_rm_sh = 0.2380
+'\sigma_{pi}^*' std_pist_sh = 0.0269
+!if bgg
+    '\sigma_{sigw}' std_sigw_sh = 0.0428
+    '\sigma_{mue}' std_mue_sh = 0
+    '\sigma_{gamm}' std_gamm_sh = 0
+!end
+'\sigma_{lr}' std_lr_sh = 0.1766
+'\sigma_{tfp}' std_tfp_sh = 0.9391
+'\sigma_{gdpdef}' std_gdpdef_sh = 0.1575
+'\sigma_{pce}' std_pce_sh = 0.0999
+% Standard deviations of the anticipated policy shocks
+!for$[1:nant]$!do
+    '\sigma_{ant?}' std_rm_sh? = !if ?<13; 0.2 !else 0 !end
 !end
 !if linear
     rkstar,cstar,istar,kstar,kbarstar,Lstar,ystar
@@ -87,8 +101,8 @@
 % Dynamic links to parameters and steady-state values
 zstar,betbar
 !links
-' !! z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
-' !! \bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
+'z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
+'\bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
 !transition_variables
 !for _s,_f !do
     'Output !! y?' y?
@@ -135,34 +149,28 @@ zstar,betbar
         Gamma,dGamma,G,dG,
     !end
 !end
+'Measurement error for long run rate' lr
+'Measurement error for Fernald TFP' tfp
+'Measurement error for GDP Deflator' gdpdef
+'Measurement error for core PCE' pce
+'10 yrs infl exp' E_pi
+'long rate exp' E_R
+% process for the anticipated shocks, so that the shocks can be passed from period to period.
+!for$[1:nant]$!do,rm?!end
 !if ~linear
     !log_variables
     !all_but
-    z,ztil,zp,g,b,mu,rm,laf1,law1,pist
+    z,ztil,zp,g,b,mu,rm,laf1,law1,pist,lr,tfp,gdpdef,pce!for$[1:nant]$!do,rm?!end
+    obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp
 !end
 !transition_shocks
 g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh
 !if bgg
     sigw_sh,mue_sh,gamm_sh
 !end
-% !parameters
-% ' !! Lmean'	Lmean = -45.9364
-% Standard deviations of the anticipated policy shocks
-% !for$[1:20]$!do
-%     ' !! \sigma_{ant?}' sig_rm_ant? = !if ?<13; 0.2 !else 0 !end
-% !end
-% ' !! \rho_{tfp}' rho_tfp = 0.1953
-% ' !! \sigma_{tfp}' sig_tfp = 0.9391
-% ' !! \rho_{gdpdef}' rho_gdpdef = 0.5379
-% ' !! \sigma_{gdpdef}' sig_gdpdef = 0.1575
-% ' !! \Gamma_{gdpdef}' gamm_gdpdef = 1.0354
-% ' !! \delta_{gdpdef}' del_gdpdef = 0.0181
-% ' !! \rho_{pce}' rho_pce = 0.2320
-% ' !! \sigma_{pce}' sig_pce = 0.0999
-% ' !! \rho_{lr}' rho_lr = 0.6936
-% ' !! \sigma_{lr}' sig_lr = 0.1766
-% !transition_shocks
-% tfp_sh,gdpdef_sh,pce_sh,lr_sh
+lr_sh,tfp_sh,gdpdef_sh,pce_sh
+% innovation for new anticipated shocks, calculated in period T only
+!for$[1:nant]$!do,rm_sh?!end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Equilibrium conditions %%%%%%%%%%%%%%%%%%%%%%%%
 !transition_equations
@@ -317,19 +325,19 @@ b = rho_b*b{-1} + b_sh*(-sigmac*(1+h*exp(-zstar))/(1-h*exp(-zstar))) !! b = 0; %
 'Investment specific technology !! eq_mu'
 mu = rho_mu*mu{-1} + mu_sh !! mu = 0; % 8.31
 'Monetary policy shock !! eq_rm'
-rm = rho_rm*rm{-1} + rm_sh !! rm = 0; % 8.32
+rm = rho_rm*rm{-1} + rm_sh !if nant>0;+ rm1{-1}!end !! rm = 0; % 8.32
 'Price mark-up shock !! eq_laf'
 !if linear
     laf = rho_laf*laf{-1} + laf1 - eta_laf*laf1{-1} !! laf = 0; % 8.33
 !else
-    laf = laf{-1}^rho_laf*$laf^(1-rho_laf)*exp(laf1-eta_laf*laf1{-1}) !! laf = Bigphi-1; % 8.33
+    log(laf/$laf) = rho_laf*log(laf{-1}/$laf) + laf1 - eta_laf*laf1{-1} !! laf = Bigphi-1; % 8.33
 !end
 laf1 = laf_sh/((1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi));
 'Wage mark-up shock !! eq_law' % eq 15++
 !if linear
     law = rho_law*law{-1} + law1 - eta_law*law1{-1} !! law = 0; % 8.34
 !else
-    law = law{-1}^rho_law*$law^(1-rho_law)*exp(law1-eta_law*law1{-1}) !! law = muwstar-1; % 8.33
+    log(law/$law) = rho_law*log(law{-1}/$law) + law1 - eta_law*law1{-1} !! law = muwstar-1; % 8.33
 !end
 law1 = law_sh/((1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar));
 'Long term inflation expectations !! eq_pist'
@@ -374,21 +382,114 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
     !if linear
         sigw = rho_sigw*sigw{-1} + sigw_sh/zeta_spsigw;
     !else
-        sigw = sigw{-1}^rho_sigw*$sigw^(1-rho_sigw)*exp(sigw_sh/zeta_spsigw) !! sigw = solve_sigw(Fom,sprd,zeta_spb);
+        log(sigw/$sigw) = rho_sigw*log(sigw{-1}/$sigw) + sigw_sh/zeta_spsigw !! sigw = solve_sigw(Fom,sprd,zeta_spb);
     !end
     'mue shock !! eq_mue'
     !if linear
         mue = rho_mue*mue{-1} + mue_sh/zeta_spmue;
     !else
-        mue = mue{-1}^rho_mue*$mue^(1-rho_mue)*exp(mue_sh/zeta_spmue) !! omegabar = exp(sigw*(norminv(Fom)-sigw/2));
+        log(mue/$mue) = rho_mue*log(mue{-1}/$mue) + mue_sh/zeta_spmue !! omegabar = exp(sigw*(norminv(Fom)-sigw/2));
     !end
     'gamm shock !! eq_gamm'
     !if linear
         gamm = rho_gamm*gamm{-1} + gamm_sh/gammstar*nstar/vstar;
     !else
-        gamm = gamm{-1}^rho_gamm*$gamm^(1-rho_gamm)*exp(gamm_sh/$gamm*$n/$v) !! gamm = gammstar;
+        log(gamm/$gamm) = rho_gamm*log(gamm{-1}/$gamm) + gamm_sh/$gamm*$n/$v !! gamm = gammstar;
     !end
 !end % if bgg
+%% ANTICIPATED SHOCKS
+% This section adds the anticipated shocks. There is one state for all the anticipated shocks that will hit in a given period (i.e. rm2 holds
+% those that will hit in two periods), and the equations are set up so that rm2 last period will feed into rm1 this period (and so on for other
+% numbers), and last period's rm1 will feed into the rm process (and affect the Taylor Rule this period).
+!if nant>0
+    !for$[1:nant]$!do
+        'Anticipated shocks !! eq_rm?'
+        rm? = rm_sh? !if ?<nant;+ rm$[?+1]${-1}!end;
+    !end
+!end
+% measurement errors
+lr = rho_lr*lr{-1} + lr_sh !! lr = 0;
+tfp = rho_tfp*tfp{-1} + tfp_sh !! tfp = 0;
+gdpdef = rho_gdpdef*gdpdef{-1} + gdpdef_sh !! gdpdef = 0;
+pce = rho_pce*pce{-1} + pce_sh !! pce = 0;
+E_pi = movavg(pi_s{1},40) !! E_pi = pi_s;
+E_R = movavg(R_s{1},40) !! E_R = R_s;
+%% Declare Measurement Variables (aka Observables)
+!measurement_variables
+obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp
+!measurement_equations
+'Output Growth (Bureau of Economic Analysis) - Quarterly!'
+!if linear
+    obs_gdp = diff(y_s) + z + 100*(exp(zstar)-1);
+!else
+    obs_gdp = difflog(y_s) + z + 100*(exp($z)-1);
+!end
+'Hours Worked (Bureau of Labor Statistics)'
+!if linear
+    obs_hours = L_s + Lmean;
+!else
+    obs_hours = log(L_s/$L_s) + Lmean;
+!end
+'Labor Share/Real Wage Growth (Bureau of Labor Statistics)'
+!if linear
+    obs_wages = diff(w_s) + z + 100*(exp(zstar)-1);
+!else
+    obs_wages = difflog(w_s) + z + 100*(exp($z)-1);
+!end
+'Inflation (GDP Deflator) (Bureau of Economic Analysis)'
+!if linear
+    obs_gdpdeflator = gamm_gdpdef*pi_s + gdpdef + 100*(pistar-1) + del_gdpdef;
+!else
+    obs_gdpdeflator = gamm_gdpdef*log(pi_s/$pi_s) + gdpdef + 100*($pi_s-1) + del_gdpdef;
+!end
+'Inflation (Core PCE) (Bureau of Economic Analysis)'
+!if linear
+    obs_corepce = pi_s + pce + 100*(pistar-1);
+!else
+    obs_corepce = log(pi_s/$pi_s) + pce + 100*($pi_s-1);
+!end
+'Nominal interest rate/Federal Funds Rate (Board of Governors of the Federal Reserve System)'
+!if linear
+    obs_nominalrate = R_s + 100*(exp(sigmac*zstar)*pistar/bet-1);
+!else
+    obs_nominalrate = log(R_s/$R_s) + 100*($R_s-1);
+!end
+'Consumption Growth (Bureau of Economic Analysis)'
+!if linear
+    obs_consumption = diff(c_s) + z + 100*(exp(zstar)-1);
+!else
+    obs_consumption = difflog(c_s) + z + 100*(exp($z)-1);
+!end
+'Investment Growth (Bureau of Economic Analysis)'
+!if linear
+    obs_investment = diff(i_s) + z + 100*(exp(zstar)-1);
+!else
+    obs_investment = difflog(i_s) + z + 100*(exp($z)-1);
+!end
+'Spread (Baa) (Board of Governors of the Federal Reserve System)'
+!if linear
+    obs_spread = spread_s + b + 100*log(sprd);
+!else
+    obs_spread = log(spread_s/$spread_s) + b + 100*log($spread_s);
+!end
+'10-year Inflation Expectations (Federal Reserve Bank of Philadelphia)'
+!if linear
+    obs_longinflation = E_pi + 100*(pistar-1);
+!else
+    obs_longinflation = log(E_pi/$pi_s) + 100*($pi_s-1);
+!end
+'10-year Interest Rate (Board of Governors of the Federal Reserve System)'
+!if linear
+    obs_longrate = E_R + lr + 100*(exp(sigmac*zstar)*pistar/bet-1);
+!else
+    obs_longrate = log(E_R/$R_s) + lr + 100*($R_s-1);
+!end
+'Total Factor Productivity (Federal Reserve Bank of San Francisco)'
+!if linear
+    obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*diff(u_s);
+!else
+    obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*difflog(u_s);
+!end
 !reporting_equations
 'Annual inflation !! pi_a'
 pi_a = movsum(pi_s,4);

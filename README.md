@@ -10,7 +10,8 @@ frbny.model - this is the model file for IRIS toolbox. It initializes all parame
 steady_state.m - this file is needed only for linear version of the model since the model file contains only steady state equations only for nonlinear version
 
 est.mat - contains the parameter struct with the max posterior mode
-priors.m - contains the priors and bounds
+
+priors.m - contains the priors and lower and upper bounds on parameters
 
 
 Auxiliary files for replication checks:

@@ -13,9 +13,7 @@
 'Habit persistence in consumption !! h' h = 0.5347
 'Utilization costs !! \psi' ppsi = 0.6862
 'Curvature of the disutility of labor !! \nu_l' nu_l = 2.5975
-'Discount rate of households !! \beta' bet = 1/(1+0.1402/100)
 'Relative risk aversion !! \sigma_{c}' sigmac = 0.8719
-'Steady state growth rate !! \gamma' gam = 0.3673/100
 'Trend in the relative price of capital !! \Upsilon' ups = 1
 'Government spending !! g^*' gstar = .18
 % Parameters of sticky prices and wages
@@ -31,15 +29,12 @@
 'Policy reaction to deviation of inflation from target !! \psi_1' psi1 = 1.3679
 'Policy reaction to output gap !! \psi_2' psi2 = 0.0388
 'Policy reaction to growth differences !! \psi_3' psi3 = 0.2464
-'Steady state spread !! spr_*'	sprd = (1+1.7444/100)^(1/4) % from annual perc to quarterly number
 !if bgg
     % Financial Frictions Parameters
     'Elasticity of spread to leverage !! \zeta_{sp,b}' zeta_spb = 0.0559
     'Survival rate of entrepreneurs !! \gamma_*' gammstar = 0.99
-    'Default probability !! F(\omega)' Fom = 1-(1-.03)^(1/4) % from annualized to quarterly
     'Elasticity of spread to volatility of entrepreneural capital shock !! \zeta_{sp,sigw}' zeta_spsigw
     'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
-    'Steady state price level !! \pi^*' pistar = 1.005
 !end
 % exogenous processes: autocorrelations
 '\rho_{g}' rho_g = 0.9863
@@ -98,9 +93,21 @@
         zeta_nRk,zeta_nR,zeta_nsigw,zeta_nmue,zeta_nqk,zeta_nn
     !end
 !end
-% Dynamic links to parameters and steady-state values
+% Dynamic links to parameters and steady-state values (needed for estimation since priors are set on _ variables)
+'Steady state growth rate !! \gamma' gam, gam_ = 0.3673 % quarterly percentage
+'Discount rate of households !! \beta' bet, bet_ = 0.1402 % quarterly percentage
+'Steady state spread !! spr_*' sprd, sprd_ = 1.7444 % annual percentage
+!if bgg
+    'Steady state price level !! \pi^*' pistar, pistar_ = .5 % quarterly percentage
+    'Default probability !! F(\omega)' Fom, Fom_ = .03 % annual percentage
+!end
 zstar,betbar
 !links
+gam := gam_/100;
+bet := 1/(1+bet_/100);
+pistar := (pistar_/100)+1;
+Fom := 1-(1-Fom_)^(1/4); % from annualized to quarterly
+sprd := (1+sprd_/100)^(1/4); % from annual perc to quarterly number
 'z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
 '\bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
 !transition_variables

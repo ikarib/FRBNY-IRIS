@@ -1,6 +1,6 @@
-function m=steady_state(m,bgg)
+function [m,success]=steady_state(m,bgg)
 % this file has been copied from DSGE-2015-Apr\initialization\getpara00_990.m
-
+success=false;
 % get parameters from the model
 var={'gam','alp','ups','bet','sigmac','del','Bigphi','gstar','nu_l','h','muwstar','sprd'};
 if bgg; var=[var,'Fom','zeta_spb','gammstar','pistar']; end
@@ -43,6 +43,7 @@ cstar = (1-gstar)*ystar - istar;
 if ~bgg
     ss={'rkstar','cstar','istar','kstar','kbarstar','Lstar','ystar'};
     m=assign(m,ss,eval(['[' strjoin(ss) ']']));
+    success=true;
     return;
 end
 
@@ -123,6 +124,7 @@ zeta_nsigw = gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*muestar*Gstar*(zeta_G
 % assign steady states to model parameters
 ss={'rkstar','cstar','istar','kstar','kbarstar','Lstar','ystar','vstar','nstar','zeta_spsigw','zeta_spmue','Rhostar','vkstar','nkstar','zeta_zmue','zeta_zsigw','zeta_zw','Gstar','muestar','zeta_Gsigw','zeta_Gw','zeta_nRk','zeta_nR','zeta_nsigw','zeta_nmue','zeta_nqk','zeta_nn'};
 m=assign(m,ss,eval(['[' strjoin(ss) ']']));
+success=true;
 end
 
 function f=zetaspbfcn(z,sigma,sprd)

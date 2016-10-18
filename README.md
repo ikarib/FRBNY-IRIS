@@ -3,7 +3,7 @@ FRBNY model in IRIS
 
 https://iristoolbox.codeplex.com/
 
-main.m - main program that reads the model file (linear or nonlinear version), runs estimation and does MH sampling. Optimization in IRIS is done using fmincon which is about 30 times faster than using csminwel with gensys. Hessian is computed during optimization so no need to recompute it separately.
+main.m - main program that reads the model file (linear or nonlinear version), runs estimation and does MH sampling. Optimization in IRIS is done using fmincon which is about 30 times faster than using csminwel with gensys. Hessian is computed during optimization so no need to recompute it separately. Zero lower bound in not implemented yet.
 
 frbny.model - this is the model file for IRIS toolbox. It initializes all parameters, lists endogenous variables and exogenous shocks in FRBNY model's linear and nonlinear equations.
 

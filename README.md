@@ -14,6 +14,9 @@ priors.m - contains the priors and bounds
 
 
 Auxiliary files for replication checks:
+
 check_loglin.m - checks for log-linearization of nonlinear model by comparing state space matrices
+
 check_gensys.m - solves and simulates the linear model in IRIS using shocks from irf.mat and checks for replication of impulse responses
+
 check_filter.m - checks Kalman filter output

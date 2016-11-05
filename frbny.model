@@ -2,9 +2,10 @@
 % Reference: Marco Del Negro, Frank Schorfheide, Chapter 2 - DSGE Model-Based Forecasting in Handbook of Economic Forecasting,
 % Graham Elliott and Allan Timmermann, Editor(s). Elsevier, 2013, Volume 2, Part A, Pages 57-140, ISSN 1574-0706, ISBN 9780444536839
 % http://dx.doi.org/10.1016/B978-0-444-53683-9.00002-5
-% Equations refer to section 7 and 8 of technical appendix:
+% Equation numbers refer to section 7 and 8 of technical appendix:
 % http://sites.sas.upenn.edu/schorf/files/hb_forecasting_appendix.pdf
 % This is a model file for IRIS toolbox (iristoolbox.codeplex.com)
+% This fork is required: https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev
 
 !parameters
 'Income share of capital !! \alpha' alp = 0.1596
@@ -33,8 +34,6 @@
     % Financial Frictions Parameters
     'Elasticity of spread to leverage !! \zeta_{sp,b}' zeta_spb = 0.0559
     'Survival rate of entrepreneurs !! \gamma_*' gammstar = 0.99
-    'Elasticity of spread to volatility of entrepreneural capital shock !! \zeta_{sp,sigw}' zeta_spsigw
-    'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
 !end
 % exogenous processes: autocorrelations
 '\rho_{g}' rho_g = 0.9863
@@ -54,7 +53,7 @@
     '\rho_{mue}' rho_mue = 0.75
     '\rho_{gamm}' rho_gamm = 0.75
 !end
-'Mean of hours !! \bar{L}'	Lmean = -45.9364
+'Mean of hours !! \bar{L}'  Lmean = -45.9364
 'i_{\alpha}^{model}' modelalp_ind = 0
 '\Gamma_{gdpdef}' gamm_gdpdef = 1.0354
 '\delta_{gdpdef}' del_gdpdef = 0.0181
@@ -85,14 +84,6 @@
 !for$[1:nant]$!do
     '\sigma_{ant?}' std_rm_sh? = !if ?<13; 0.2 !else 0 !end
 !end
-!if linear
-    rkstar,cstar,istar,kstar,kbarstar,Lstar,ystar
-    !if bgg
-        vstar,nstar,Gstar,muestar,vkstar,nkstar,zeta_Gsigw,zeta_Gw
-        Rhostar,zeta_zmue,zeta_zsigw,zeta_zw,
-        zeta_nRk,zeta_nR,zeta_nsigw,zeta_nmue,zeta_nqk,zeta_nn
-    !end
-!end
 % Dynamic links to parameters and steady-state values (needed for estimation since priors are set on _ variables)
 'Steady state growth rate !! \gamma' gam, gam_ = 0.3673 % quarterly percentage
 'Discount rate of households !! \beta' bet, bet_ = 0.1402 % quarterly percentage
@@ -100,16 +91,107 @@
 !if bgg
     'Steady state price level !! \pi^*' pistar, pistar_ = .5 % quarterly percentage
     'Default probability !! F(\omega)' Fom, Fom_ = .03 % annual percentage
+    'Elasticity of spread to volatility of entrepreneural capital shock !! \zeta_{sp,sigw}' zeta_spsigw
+    'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
 !end
 zstar,betbar
+!if linear
+    rkstar,cstar,istar,kstar,kbarstar,Lstar,ystar
+    wstar, % dlinks
+    !if bgg
+        vstar,nstar,Gstar,muestar,vkstar,nkstar,zeta_Gsigw,zeta_Gw
+        Rhostar,zeta_zmue,zeta_zsigw,zeta_zw,
+        zeta_nRk,zeta_nR,zeta_nsigw,zeta_nmue,zeta_nqk,zeta_nn
+        zwstar,sigwstar,omegabarstar,Gammastar,dGdomegastar,dGammadomegastar,d2Gammadomegadsigmastar,d2Gdomegadsigmastar,dg,GammamuG,GammamuGprime,zeta_bw,zeta_bw_zw,wekstar,dGammadsigmastar,dGdsigmastar,zeta_bmue,Rkstar,zeta_bsigw % dlinks
+    !end
+!end
 !links
-gam := gam_/100;
-bet := 1/(1+bet_/100);
-pistar := (pistar_/100)+1;
-Fom := 1-(1-Fom_)^(1/4); % from annualized to quarterly
-sprd := (1+sprd_/100)^(1/4); % from annual perc to quarterly number
-'z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
-'\bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
+    gam := gam_/100;
+    bet := 1/(1+bet_/100);
+    sprd := (1+sprd_/100)^(1/4); % from annual perc to quarterly number
+    'z^* ' zstar := log(gam+1)+(alp/(1-alp))*log(ups);
+    '\bar{\beta}' betbar := bet*exp((1-sigmac)*zstar);
+    !if bgg
+        pistar := (pistar_/100)+1;
+        Fom := 1-(1-Fom_)^(1/4); % from annualized to quarterly
+        !if ~linear
+            zeta_spsigw := zeta_sp(sigw,Fom,sprd,2);
+            zeta_spmue := zeta_sp(sigw,Fom,sprd,3);
+        !end
+    !end
+    !if linear
+        rkstar := sprd*exp(sigmac*zstar)/bet*ups-1+del;
+        wstar := (alp^(alp)*(1-alp)^(1-alp)*rkstar^(-alp)/Bigphi)^(1/(1-alp));
+        Lstar := (wstar/muwstar/((1-gstar)*(alp/(1-alp)*wstar/rkstar)^alp/Bigphi-(1-(1-del)/ups*exp(-zstar))*ups*exp(zstar)*alp/(1-alp)*wstar/rkstar)/(1-h*exp(-zstar)))^(1/(1+nu_l));
+        kstar := (alp/(1-alp))*wstar*Lstar/rkstar;
+        kbarstar := kstar*(gam+1)*ups^(1/(1-alp));
+        istar := kbarstar*( 1-((1-del)/((gam+1)*ups^(1/(1-alp)))) );
+        ystar := (kstar^alp)*(Lstar^(1-alp))/Bigphi;
+        cstar := (1-gstar)*ystar - istar;
+        !if bgg
+            zwstar := norminv(Fom);
+            sigwstar := solve_sigw(zeta_spb,Fom,sprd);
+            Gstar := normcdf(zwstar-sigwstar);
+            omegabarstar := exp(sigwstar*(zwstar-sigwstar/2));
+            Gammastar := omegabarstar*(1-Fom)+Gstar;
+            dGammadomegastar := 1-Fom;
+            dGammadsigmastar := -normpdf(zwstar-sigwstar);
+            dGdomegastar := normpdf(zwstar)/sigwstar;
+            dGdsigmastar := zwstar*dGammadsigmastar/sigwstar;
+            d2Gammadomegadsigmastar = dGdomegastar*(zwstar-sigwstar);
+            d2Gdomegadsigmastar = -dGdomegastar*(1-zwstar*(zwstar-sigwstar))/sigwstar;
+            dg := dGdomegastar/dGammadomegastar;
+
+            % evaluate mu, nk, and Rhostar
+            muestar := (1-1/sprd)/(dg*(1-Gammastar)+Gstar);
+            nkstar := 1-sprd*GammamuG;
+            Rhostar := 1/nkstar-1;
+
+            % a couple of combinations
+            GammamuG := Gammastar-muestar*Gstar;
+            GammamuGprime := dGammadomegastar-muestar*dGdomegastar;
+
+            % elasticities wrt omegabar
+            zeta_bw := muestar*nkstar*(zwstar/sigwstar-dg)/(1/dg-muestar);
+            zeta_zw := omegabarstar*dGdomegastar*(1/dg-muestar)/GammamuG;
+            zeta_bw_zw := zeta_bw/zeta_zw;
+
+            % evaluate wekstar and vkstar
+            wekstar := (1-gammstar/betbar)*nkstar-gammstar/betbar*(sprd*(1-muestar*Gstar)-1);
+            vkstar := (nkstar-wekstar)/gammstar;
+
+            % evaluate nstar and vstar
+            nstar := nkstar*kbarstar;
+            vstar := vkstar*kbarstar;
+
+            % elasticities wrt mue
+            zeta_bmue := -muestar*(nkstar*dGammadomegastar*dGdomegastar/GammamuGprime+dGammadomegastar*Gstar*sprd)/
+                ((1-Gammastar)*GammamuGprime*sprd+dGammadomegastar*(1-nkstar));
+            zeta_zmue := -muestar*Gstar/GammamuG;
+            zeta_spmue := (zeta_bw_zw*zeta_zmue-zeta_bmue)/(1-zeta_bw_zw);
+
+            % some ratios/elasticities
+            Rkstar := sprd*exp(sigmac*zstar)*pistar/bet;
+            zeta_Gw := dGdomegastar/Gstar*omegabarstar;
+            zeta_Gsigw := dGdsigmastar/Gstar*sigwstar;
+
+            % elasticities wrt sigw
+            zeta_bsigw = sigwstar*(((1-muestar*dGdsigmastar/dGammadsigmastar)/
+                (1-muestar*dGdomegastar/dGammadomegastar)-1)*dGammadsigmastar*sprd+
+                muestar*nkstar*(dGdomegastar*d2Gammadomegadsigmastar-dGammadomegastar*d2Gdomegadsigmastar)/
+                GammamuGprime^2)/((1-Gammastar)*sprd+dGammadomegastar/GammamuGprime*(1-nkstar));
+            zeta_zsigw := sigwstar*(dGammadsigmastar-muestar*dGdsigmastar)/GammamuG;
+            zeta_spsigw := (zeta_bw_zw*zeta_zsigw-zeta_bsigw)/(1-zeta_bw_zw);
+
+            % elasticities for the net worth evolution
+            zeta_nRk := gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*(1-muestar*Gstar*(1-zeta_Gw/zeta_zw));
+            zeta_nR := gammstar/betbar*(1+Rhostar)*(1-nkstar+muestar*Gstar*sprd*zeta_Gw/zeta_zw);
+            zeta_nqk := gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*(1-muestar*Gstar*(1+zeta_Gw/zeta_zw/Rhostar))-gammstar/betbar*(1+Rhostar);
+            zeta_nn := gammstar/betbar+gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*muestar*Gstar*zeta_Gw/zeta_zw/Rhostar;
+            zeta_nmue := gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*muestar*Gstar*(1-zeta_Gw*zeta_zmue/zeta_zw);
+            zeta_nsigw := gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*muestar*Gstar*(zeta_Gsigw-zeta_Gw/zeta_zw*zeta_zsigw);
+        !end
+    !end
 !transition_variables
 !for _s,_f !do
     'Output !! y?' y?
@@ -140,14 +222,14 @@ sprd := (1+sprd_/100)^(1/4); % from annual perc to quarterly number
 'Price mark-up shock' laf1
 'Wage mark-up !! \lambda_w' law
 'Wage mark-up shock' law1
-!if ~linear
+!if ~linear && ~kimball
     p1,p2,chi_p,w1,w2,chi_w
 !end
 'Time-varying inflation target !! \pi^*' pist
 'Monetary policy shock !! r^m' rm
 !if bgg
     'Entrepreneurial net worth' n
-    'Shock to dispersion of entrepreneural abilities !! \sigma_w' sigw = 0.499364227649214
+    'Shock to dispersion of entrepreneural abilities !! \sigma_w' sigw = 0.5
     'Spread shock !! \mu_e' mue
     'Net worth shock' gamm
     !if ~linear
@@ -282,7 +364,10 @@ lr_sh,tfp_sh,gdpdef_sh,pce_sh
      + iota_p*pi_s{-1} + betbar*pi_s{1} )/(1+iota_p*betbar) + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*laf; % 8.103
 !else
     !if kimball
-        %TO DO: Kimball aggregator for prices
+        % Kimball aggregator for prices (linearized)
+        log(pi_s/$pi_s) = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*log(mc_s/$mc_s)
+         + iota_p*log(pi_s{-1}/$pi_s) + betbar*log(pi_s{1}/$pi_s) )/(1+iota_p*betbar)
+         + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*log(laf/$laf) !! mc_s=1/Bigphi; % 8.103,,8.42
     !else
         % Dixit-Stiglitz CES aggregator for prices
         1 = (1-zeta_p)*(p2/p1)^(1/$laf)+zeta_p/chi_p^(1/$laf) !! p1=p2; % 8.43,8.44
@@ -299,7 +384,11 @@ lr_sh,tfp_sh,gdpdef_sh,pce_sh
      + betbar*(w_s{1}+z{1}+pi_s{1}) )/(1+betbar) + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*law; % 8.106
 !else
     !if kimball
-        %TO DO: Kimball aggregator for wages
+        % Kimball aggregator for wages (linearized)
+        log(w_s/$w_s) = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-log(muw_s/$muw_s)
+         - (1+iota_w*betbar)*(log(pi_s/$pi_s)+z-$z) + (log(w_s{-1}/$w_s)+iota_w*(log(pi_s{-1}/$pi_s)+z{-1}-$z))
+         + betbar*(log(w_s{1}/$w_s)+z{1}-$z+log(pi_s{1}/$pi_s)) )/(1+betbar)
+         + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*log(law/$law) !! muw_s=muwstar; % 8.106,8.66
     !else
         % Dixit-Stiglitz CES aggregator for wages
         1 = (1-zeta_w)*(w_s*w2/w1)^(1/$law)+zeta_w*(w_s/w_s{-1}/chi_w)^(1/$law) !! w1=w2*w_s; % 8.65,8.67
@@ -389,7 +478,7 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
     !if linear
         sigw = rho_sigw*sigw{-1} + sigw_sh/zeta_spsigw;
     !else
-        log(sigw/$sigw) = rho_sigw*log(sigw{-1}/$sigw) + sigw_sh/zeta_spsigw !! sigw = solve_sigw(Fom,sprd,zeta_spb);
+        log(sigw/$sigw) = rho_sigw*log(sigw{-1}/$sigw) + sigw_sh/zeta_spsigw !! sigw = fzero(@(sigma) zeta_spb-zeta_sp(sigma,Fom,sprd,1),0.5,optimset('Display','off'));
     !end
     'mue shock !! eq_mue'
     !if linear
@@ -429,7 +518,7 @@ obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_cons
 !if linear
     obs_gdp = diff(y_s) + z + 100*(exp(zstar)-1);
 !else
-    obs_gdp = difflog(y_s) + z + 100*(exp($z)-1);
+    obs_gdp = difflog(y_s) + z - $z + 100*(exp($z)-1);
 !end
 'Hours Worked (Bureau of Labor Statistics)'
 !if linear
@@ -441,7 +530,7 @@ obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_cons
 !if linear
     obs_wages = diff(w_s) + z + 100*(exp(zstar)-1);
 !else
-    obs_wages = difflog(w_s) + z + 100*(exp($z)-1);
+    obs_wages = difflog(w_s) + z - $z + 100*(exp($z)-1);
 !end
 'Inflation (GDP Deflator) (Bureau of Economic Analysis)'
 !if linear
@@ -465,13 +554,13 @@ obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_cons
 !if linear
     obs_consumption = diff(c_s) + z + 100*(exp(zstar)-1);
 !else
-    obs_consumption = difflog(c_s) + z + 100*(exp($z)-1);
+    obs_consumption = difflog(c_s) + z - $z + 100*(exp($z)-1);
 !end
 'Investment Growth (Bureau of Economic Analysis)'
 !if linear
     obs_investment = diff(i_s) + z + 100*(exp(zstar)-1);
 !else
-    obs_investment = difflog(i_s) + z + 100*(exp($z)-1);
+    obs_investment = difflog(i_s) + z - $z + 100*(exp($z)-1);
 !end
 'Spread (Baa) (Board of Governors of the Federal Reserve System)'
 !if linear
@@ -495,26 +584,8 @@ obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_cons
 !if linear
     obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*diff(u_s);
 !else
-    obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*difflog(u_s);
+    obs_tfp = (1-alp*modelalp_ind)*(z-$z) + tfp + alp/(1-alp*(1-modelalp_ind))*difflog(u_s);
 !end
 !reporting_equations
 'Annual inflation !! pi_a'
 pi_a = movsum(pi_s,4);
-
-% Given elasticity of the spread w.r.t. leverage, solve for sigmaomegastar
-!if ~linear && ~exist('solve_sigw.m')
-    !export(solve_sigw.m)
-function sig_w = solve_sigw(Fom,sprd,zeta_spb)
-    sig_w = fzero(@zetaspbfcn,0.5,optimset('Display','off'));
-    function f=zetaspbfcn(sigw)
-        zw=norminv(Fom);
-        G=normcdf(zw-sigw);
-        Gamma=exp(sigw*(zw-sigw/2))*(1-Fom)+G;
-        dg=normpdf(zw)/sigw/(1-Fom);
-        mue=(1-1/sprd)/(dg*(1-Gamma)+G);
-        sg=sprd*(Gamma-mue*G);
-        f = zeta_spb-(sg-1)/((1/dg-mue)/mue/(1-Gamma)*(Gamma-G)/(zw/sigw-dg)-sg);
-    end
-end
-    !end
-!end

@@ -8,7 +8,7 @@ irisrequired 20151016
 
 %% Read and Solve Model
 
-o = struct; o.kimball = true; o.bgg = true; o.nant = 0;
+o = struct; o.kimball = true; o.bgg = true; o.nant = 6;
 m = model('frbny.model','assign=',o,'linear=',true);
 % load P; m = assign(m,P);
 m = solve(m);
@@ -20,10 +20,9 @@ m = sstate(m);
 chksstate(m);
 
 %% Load Historical Database
-load data
+load Data
 Range = dbrange(Data);
 Range(1) = []; % drop 1959Q2
-objRange = Range(3:end); % sample
 % Data = dbload('data_151127.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 
 %% Define and Visualise Prior Distributions
@@ -52,10 +51,15 @@ E = priors(P,o);
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
-filterOpt = {'relative=',false,'objRange=',objRange};
-optimSet = {'MaxFunEvals=',10000,'MaxIter=',100,'TolFun=',1e-10,'UseParallel=',true};
+J = struct;
+for v=sprintfc('std_rm_sh%d',1:o.nant)
+    J.(v{1})=tseries(Range,0);
+    J.(v{1})=tseries(qq(2008,4):Range(end),0.2);
+end
+filterOpt = {'relative=',false,'objRange=',Range(3:end),'vary=',J};
+optimSet = {'MaxFunEvals=',10000,'MaxIter=',100,'TolFun=',1e-10,'UseParallel=',false};
 tic
-[est,pos,C,H,mest] = estimate(m,Data,Range,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty','chkSstate=',{'eqtn','sstate'});
+[est,pos,C,H,mest] = estimate(m,Data,Range,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
 toc
 
 %% User Supplied Optimisation Routine

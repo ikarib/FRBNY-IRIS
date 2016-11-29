@@ -13,3 +13,4 @@ P.mat - contains the parameter struct with the max posterior mode
 
 priors.m - contains the priors and lower and upper bounds on parameters
 
+These programs require my IRIS fork which is available at https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev

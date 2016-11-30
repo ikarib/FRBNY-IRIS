@@ -8,15 +8,15 @@ irisrequired 20151016
 
 %% Read and Solve Model
 
-o = struct; o.kimball = true; o.bgg = true; o.nant = 6;
+o = struct; o.kimball = true; o.bgg = true; o.nant = 0;
 m = model('frbny.model','assign=',o,'linear=',true);
-% load P; m = assign(m,P);
-m = solve(m);
-m = sstate(m);
-% m = model('frbny.model','assign=',o,'linear=',false);
-% load P_best; m = assign(m,P);
-% m = sstate(m);
-% m = solve(m);
+if islinear(m)
+    m = solve(m);
+    m = sstate(m);
+else
+    m = sstate(m);
+    m = solve(m);
+end
 chksstate(m);
 
 %% Load Historical Database

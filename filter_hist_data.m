@@ -25,11 +25,14 @@ irisrequired 20151016
 
 o = struct; o.kimball = true; o.bgg = true; o.nant = 6;
 m = model('frbny.model','assign=',o,'linear=',false);
-if exist('P.mat','file'); load P; m=redresh(assign(m,P)); end
-% m = solve(m);
-% m = sstate(m);
-m = sstate(m);
-m = solve(m);
+if exist('P.mat','file'); load P; m=refresh(assign(m,P)); end
+if islinear(m)
+    m = solve(m);
+    m = sstate(m);
+else
+    m = sstate(m);
+    m = solve(m);
+end
 chksstate(m);
 
 mest = m;

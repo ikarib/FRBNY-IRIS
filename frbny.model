@@ -5,12 +5,8 @@
 % Equation numbers refer to section 7 and 8 of technical appendix:
 % http://sites.sas.upenn.edu/schorf/files/hb_forecasting_appendix.pdf
 % This is a model file for IRIS toolbox (iristoolbox.codeplex.com)
-% This fork is required: https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev
-
-% required options:
-% kimball = Kimball aggregator (true/false)
-% bgg = BGG financial frictions (true/false)
-% nant = Number of anticipated policy shocks (<=12)
+% This IRIS fork is required to estimate the model:
+% https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev
 
 !parameters
 'Income share of capital !! \alpha' alp = 0.1596
@@ -521,7 +517,21 @@ E_R = movavg(R_s{1},40) !! E_R = R_s;
 !end
 %% Declare Measurement Variables (aka Observables)
 !measurement_variables
-obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp!for$[1:nant]$!do,obs_exprate?!end
+'Output Growth' obs_gdp
+'Hours Worked' obs_hours
+'Labor Share/Real Wage Growth' obs_wages
+'Inflation (GDP Deflator)' obs_gdpdeflator
+'Inflation (Core PCE)' obs_corepce
+'Federal Funds Rate' obs_nominalrate
+'Consumption Growth' obs_consumption
+'Investment Growth' obs_investment
+'Spread (Baa)' obs_spread
+'10-year Inflation Expectations' obs_longinflation
+'10-year Interest Rate' obs_longrate
+'Total Factor Productivity' obs_tfp
+!for$[1:nant]$!do
+    '' obs_exprate?
+!end
 !measurement_equations
 'Output Growth (Bureau of Economic Analysis) - Quarterly!'
 !if linear

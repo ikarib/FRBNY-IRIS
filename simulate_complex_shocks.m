@@ -26,7 +26,7 @@ startDate = 1;
 endDate = 40;
 plotRng = startDate-1 : startDate+19;
 
-%% Simulate Government Spending Shock
+%% Simulate Unanticipated Government Spending Shock
 
 d = zerodb(m,startDate-3:startDate);
 d.g_sh(startDate) = log(1.1);
@@ -45,7 +45,7 @@ plotList = { ...
     ' "Total Factor Productivity" obs_tfp ', ...
    };
 dbplot(s,plotRng,plotList,'tight=',true,'transform=',@(x) 100*(exp(x)-1));
-grfun.ftitle('Government Spending Shocks');
+grfun.ftitle('Responses to Unanticipated Government Spending Shock');
 
 %% Anticipated vs Unanticipated Government Spending Shock
 %

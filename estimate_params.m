@@ -1,3 +1,10 @@
+%% Run Bayesian Parameter Estimation
+%
+% Use bayesian methods to estimate some of the parameters. First, set up
+% our priors about the individual parameters, and locate the posterior
+% mode. Then, run a posterior simulator (adaptive random-walk Metropolis)
+% to obtain the whole distributions of the parameters.
+
 %% Clear Workspace
 %
 % Clear workspace, close all graphics figures, clear command window, and
@@ -5,36 +12,29 @@
 
 clear; clc; close all
 irisrequired 20151016
+%#ok<*NOPTS>
 
-%% Read and Solve Model
+%% Load Solved Model Object and Historical Database
+%
+% Load the solved model object built `read_linear_model`, and the example database
+% created in `read_data`. Run `read_linear_model` and `read_data` at least once
+% before running this m-file.
 
-o = struct; o.kimball = true; o.bgg = true; o.nant = 0;
-m = model('frbny.model','assign=',o,'linear=',true);
-if islinear(m)
-    m = solve(m);
-    m = sstate(m);
-else
-    m = sstate(m);
-    m = solve(m);
-end
-chksstate(m);
+load read_linear_model.mat m o;
+load read_data.mat d startHist endHist;
 
-%% Load Historical Database
-load Data
-Range = dbrange(Data);
-Range(1) = []; % drop 1959Q2
-% Data = dbload('data_151127.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+%% Set Up Estimation Input Structure
+init = get(m,'parameters')
+E = priors(init,o);
+disp(E)
 
-%% Define and Visualise Prior Distributions
+%% Visualise Prior Distributions
+%
 % The function `plotpp` plots the prior distributions (this function can
 % also plot the priors together with posteriors obtained from a posterior
 % simulator -- see below).
-Pm = get(m,'parameters');
-if exist('P.mat','file'); load P; else P=Pm; end
-E = priors(P,o);
-% Pm = orderfields(Pm*fields(P),fields(P));
-% [~,~,h] = plotpp(E,Pm,[],'axes=',{'fontsize=',8},'title=',{'fontsize=',8},'subplot=',[4,7],'plotInit=',true,'figure=',{'position=',get(0,'ScreenSize')});
-% ftitle(h.figure,'Prior Distributions');
+[~,~,h] = plotpp(E,[],[],'subplot=',[4,7],'figure=',{'position=',get(0,'ScreenSize')});
+ftitle(h.figure,'Prior Distributions');
 
 %% Maximise Posterior Distribution to Locate Its Mode
 %
@@ -51,33 +51,37 @@ E = priors(P,o);
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
-J = struct;
-for v=sprintfc('std_rm_sh%d',1:o.nant)
-    J.(v{1})=tseries(Range,0);
-    J.(v{1})=tseries(qq(2008,4):Range(end),0.2);
-end
-filterOpt = {'relative=',false,'objRange=',Range(3:end),'vary=',J};
+% J = struct;
+% for v=sprintfc('std_rm_sh%d',1:o.nant)
+%     J.(v{1})=tseries(startHist,0);
+%     J.(v{1})=tseries(qq(2008,4):endHist,0.2);
+% end
+filterOpt = {'relative=',false,'objRange=',startHist+2:endHist}; % ,'vary=',J
 optimSet = {'MaxFunEvals=',10000,'MaxIter=',100,'TolFun=',1e-10,'UseParallel=',false};
 tic
-[est,pos,C,H,mest] = estimate(m,Data,Range,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
+[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt, ...
+    'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
 toc
 
 %% User Supplied Optimisation Routine
-% tic
-% [PStar1,Pos1,PCov1,Hess1,mest1] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'solver=',@mycsminwel);
-% toc
+% [est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt, ...
+%     'solver=',@mycsminwel,'sstate=',true,'nosolution=','penalty');
 
-%% Save and Print Estimation Results
+%% Print Estimation Results
 disp('Point estimates');
-disp(dbfun(@(x,y) [x,y,y-x],P,est))
-P=est; save P P
+disp(dbfun(@(x,y) [x,y,y-x],init,est))
+
 disp('Parameters in the estimated model object');
 disp(get(mest,'parameters')-fields(est))
 
 %% Visualise Prior Distributions and Posterior Modes
+%
+% Use the function `plotpp` again supplying now the struct `est` with the
+% estimated posterior modes as the second input argument. The posterior
+% modes are added as stem graphs, and the estimated values are included in
+% the graph titles.
+
 [~,~,h] = plotpp(E,est,[], ...
-    'title=',{'fontsize=',8}, ...
-    'axes=',{'fontsize=',8}, ...
     'plotInit=',{'color=','red','marker=','*'}, ...
     'figure=',{'position=',get(0,'ScreenSize')}, ...
     'subplot=',[4,7]);
@@ -93,7 +97,7 @@ legend('Prior Density','Starting Value','Posterior Mode','Lower Bound','Upper Bo
 plist = fieldnames(E);
 std = sqrt(diag(inv(H{1})));
 disp('Std deviations of parameter estimates');
-[char(plist), num2str(std,': %-g') ] %#ok<NOPTS>
+[char(plist), num2str(std,': %-g') ]
 
 %% Examine Neighbourhood Around Optimum
 %
@@ -157,13 +161,33 @@ s = stats(pos,theta,logpost)
 
 [~,~,h] = plotpp(E,est,theta, ...
     'plotprior=',{'linestyle=','--'}, ...
-    'title=',{'fontsize=',8}, ...
     'figure=',{'position=',get(0,'ScreenSize')}, ...
     'plotInit=',false, ...
     'subplot=',[4,7]);
+
 ftitle(h.figure,'Prior Distributions and Posterior Distributions'); 
-legend('Prior Density','Posterior Mode','Posterior Density','Lower Bound','Upper Bound');
+
+legend('Prior Density','Posterior Mode','Posterior Density', ...
+    'Lower Bound','Upper Bound');
 
 %% Save Model Object with Estimated Parameters
 
-save estimation mest pos E est theta logpost;
+save estimate_params.mat mest pos E theta logpost;
+
+%% Help on IRIS Functions Used in This File
+%
+% Use either `help` to display help in the command window, or `idoc`
+% to display help in an HTML browser window.
+%
+%    help model/estimate
+%    help model/neighbourhood
+%    help poster/arwm
+%    help poster/stats
+%    help grfun/plotpp
+%    help logdist
+%    help logdist.normal
+%    help logdist.lognormal
+%    help logdist.beta
+%    help logdist.gamma
+%    help logdist.invgamma
+%    help logdist.uniform

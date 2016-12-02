@@ -1,5 +1,4 @@
 %% Kalman Filtering and Historical Simulations
-% by Iskander Karibzhanov
 %
 % Run the Kalman filter on the historical data to back out unobservable
 % variables (such as the productivity process) and shocks, and perform a
@@ -21,30 +20,8 @@ irisrequired 20151016
 % historical database created in `read_data`. Run `estimate_params` at
 % least once before running this m-file.
 
-% load estimate.mat mest;
-
-o = struct; o.kimball = true; o.bgg = true; o.nant = 6;
-m = model('frbny.model','assign=',o,'linear=',false);
-if exist('P.mat','file'); load P; m=refresh(assign(m,P)); end
-if islinear(m)
-    m = solve(m);
-    m = sstate(m);
-else
-    m = sstate(m);
-    m = solve(m);
-end
-chksstate(m);
-
-mest = m;
-
-%% Load Historical Database
-load data
-Range = dbrange(Data);
-Range(1) = []; % drop 1959Q2
-objRange = Range(3:end); % sample
-startHist = Range(1);
-endHist = Range(end);
-% Data = dbload('data_151127.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+load estimate_params.mat mest;
+load read_data.mat d startHist endHist;
 
 %% Run Kalman Filter
 %
@@ -58,7 +35,7 @@ endHist = Range(end);
 % Use the options `'output='`, `'meanOnly='`, `'returnStd='` and
 % `'returnMse='` to control what is reported in the output data struct.
 
-[~,f,v,~,pe,co] = filter(mest,Data,startHist:endHist+10,'relative=',false,'objRange=',objRange);
+[~,f,v,~,pe,co] = filter(mest,d,startHist:endHist+10,'relative=',false,'objRange=',startHist+2:endHist);
 
 %% Plot Estimated Shocks
 %
@@ -93,7 +70,7 @@ ftitle('Histograms of Estimated Transition Shocks');
 
 k = 8;
 
-[~,g] = filter(mest,Data,startHist:endHist, ...
+[~,g] = filter(mest,d,startHist:endHist, ...
     'output=','pred,smooth','meanOnly=',true,'ahead=',k); %?meanOnly?
 
 g %#ok<NOPTS>
@@ -101,7 +78,7 @@ g.pred %?nomeansubdb?
 g.smooth
 
 figure();
-[h1,h2] = plotpred(startHist:endHist,[Data.obs_nominalrate,g.pred.obs_nominalrate]); %?plotpred?
+[h1,h2] = plotpred(startHist:endHist,[d.obs_nominalrate,g.pred.obs_nominalrate]); %?plotpred?
 set(h1,'marker','.');
 set(h2,'linestyle',':','linewidth',1.5);
 grid on;
@@ -125,14 +102,14 @@ dbfun(@(x,y) max(abs(x-y)),f.mean,s)
 % curve without any cost-push shocks.
 
 f1 = f.mean;
-f1.Ep(:) = 0;
+f1.laf_sh(:) = 0;
 
 s1 = simulate(mest,f1,startHist:endHist,'anticipate=',false);
 
 figure();
-plot([s.obs_corepce,s1.obs_corepce]);
+plot([s.obs_corepce,s1.obs_corepce]*4);
 grid on;
-title('Inflation, Q/Q PA');
+title('Core PCE Inflation, Q/Q PA');
 legend('Actual Data','Counterfactual without Cost Push Shocks');
 
 %% Simulate Contributions of Shocks
@@ -160,16 +137,47 @@ c.obs_corepce
 % first $n$ columns.
 
 figure();
+plotrange = qq(2007,1):endHist;
 
-subplot(2,1,1);
-plot(startHist:endHist,[s.obs_corepce,c.obs_corepce{:,end}]);
+subplot(2,3,1);
+plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end}]*4);
 grid on;
-title('Inflation, Q/Q PA');
+title('Output Growth, Q/Q PA');
 legend('Actual data','Steady State + Init Cond', ...
     'location','northWest');
 
-subplot(2,1,2);
-barcon(startHist:endHist,c.obs_corepce{:,1:end-2});
+subplot(2,3,4);
+barcon(plotrange,c.obs_gdp{:,1:end-2}*4);
+grid on;
+title('Contributions of shocks');
+
+edescript = get(mest,'eDescript');
+legend(edescript{:},'location','northWest');
+
+subplot(2,3,2);
+plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end}]*4);
+grid on;
+title('Core PCE Inflation, Q/Q PA');
+legend('Actual data','Steady State + Init Cond', ...
+    'location','northWest');
+
+subplot(2,3,5);
+barcon(plotrange,c.obs_corepce{:,1:end-2}*4);
+grid on;
+title('Contributions of shocks');
+
+edescript = get(mest,'eDescript');
+legend(edescript{:},'location','northWest');
+
+subplot(2,3,3);
+plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end}]*4);
+grid on;
+title('Interest Rate, Q/Q PA');
+legend('Actual data','Steady State + Init Cond', ...
+    'location','northWest');
+
+subplot(2,3,6);
+barcon(plotrange,c.obs_nominalrate{:,1:end-2}*4);
 grid on;
 title('Contributions of shocks');
 
@@ -186,26 +194,49 @@ legend(edescript{:},'location','northWest');
 
 g = grouping(mest,'shock');
 g = addgroup(g,'Measurement','lr_sh,tfp_sh,gdpdef_sh,pce_sh');
-g = addgroup(g,'Demand','g_sh,rm_sh,pist_sh');
-g = addgroup(g,'Supply','z_sh,zp_sh,mu_sh,laf_sh,law_sh');
-g = addgroup(g,'Financial','b_sh,,sigw_sh,mue_sh,gamm_sh');
+g = addgroup(g,'Policy','g_sh,rm_sh,pist_sh');
+g = addgroup(g,'Production','z_sh,zp_sh,mu_sh,laf_sh,law_sh');
+g = addgroup(g,'Financial','b_sh,sigw_sh,mue_sh,gamm_sh');
 
 [cg,leg] = eval(g,c); %?groupeval?
 
 figure();
 
-subplot(2,1,1);
-plot(startHist:endHist,[s.obs_corepce,c.obs_corepce{:,end-1}]);
+subplot(2,3,1);
+plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end-1}]*4);
 grid on;
-title('Inflation, Q/Q PA');
+title('Output Growth, Q/Q PA');
 legend('Actual Data','Steady state + Init Cond','location','northWest');
 
-subplot(2,1,2);
-conbar(cg.obs_corepce{:,1:end-2});
+subplot(2,3,4);
+barcon(plotrange,cg.obs_gdp{:,1:end-2}*4);
 grid on;
 title('Contributions of Shocks');
 legend(leg,'location','northWest');
 
+subplot(2,3,2);
+plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end-1}]*4);
+grid on;
+title('Core PCE Inflation, Q/Q PA');
+legend('Actual Data','Steady state + Init Cond','location','northWest');
+
+subplot(2,3,5);
+barcon(plotrange,cg.obs_corepce{:,1:end-2}*4);
+grid on;
+title('Contributions of Shocks');
+legend(leg,'location','northWest');
+
+subplot(2,3,3);
+plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end-1}]*4);
+grid on;
+title('Interest Rate, Q/Q PA');
+legend('Actual Data','Steady state + Init Cond','location','northWest');
+
+subplot(2,3,6);
+barcon(plotrange,cg.obs_nominalrate{:,1:end-2}*4);
+grid on;
+title('Contributions of Shocks');
+legend(leg,'location','northWest');
 %% Save Output Data for Future Use
 %
 % Save the output database `f` from the basic run of the filter in a
@@ -231,7 +262,7 @@ save filter_hist_data.mat f;
 Range = startHist:endHist+10;
 nPer = length(Range)
 
-mll = loglik(mest,Data,Range,'relative=',false,'objDecomp=',true); %?objDecomp?
+mll = loglik(mest,d,Range,'relative=',false,'objDecomp=',true); %?objDecomp?
 
 size(mll) %?length?
 

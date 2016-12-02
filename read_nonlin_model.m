@@ -34,8 +34,6 @@ m = model('frbny.model','assign=',o,'linear=',false);
 % Use the function `get` <?get?> to retrieve a database with currently assigned
 % parameter values in the model file.
 
-if exist('P.mat','file'); load P; m=refresh(assign(m,P)); end
-
 disp('Get a parameter database from the model object');
 get(m,'parameters') %?get?
 
@@ -63,7 +61,7 @@ m %#ok<NOPTS>
 %
 % Save the solved model object to a mat-file (binary file) for future use.
 
-save read_nonlin_model.mat m;
+save read_nonlin_model.mat m o;
 
 %% Help on IRIS Functions Used in This File
 %

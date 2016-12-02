@@ -1,5 +1,4 @@
 %% Posterior Simulator with 'saveEvery=' Option
-% by Jaromir Benes
 %
 % In this file, we show two features of convenience when running larger
 % posterior simulations. First, the posterior simulator can be run with the
@@ -15,10 +14,8 @@
 % Clear workspace, close all graphics figures, clear command window, and
 % check the IRIS version.
 
-clear;
-close all;
-clc;
-irisrequired 20140612;
+clear; clc; close all
+irisrequired 20151016
 
 %% Load Posterior Simulator Object
 %

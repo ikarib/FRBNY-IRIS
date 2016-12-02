@@ -1,5 +1,4 @@
 %% Simulate Fisher Info Matrix and Test Parameter Identification
-% by Jaromir Benes
 %
 % Calculate estimates of the Fisher information matrix. The Fisher matrix
 % is a property of the model itself, and is independent of any data. It
@@ -16,17 +15,15 @@
 % Clear workspace, close all graphics figures, clear command window, and
 % check the IRIS version.
 
-clear;
-close all;
-clc;
-irisrequired 20140315;
+clear; clc; close all
+irisrequired 20151016
 
 %% Load Solved Model Object
 %
-% Load the solved model object built in `read_model`. Run `read_model` at
+% Load the solved model object built in `read_linear_model`. Run `read_linear_model` at
 % least once before running this m-file.
 
-load read_model m;
+load read_linear_model m;
 
 %% Calculate Fisher Information Matrix
 %
@@ -54,7 +51,8 @@ rng(0);
 
 % List of parameters for which for which the Fisher matrix will be
 % evaluated.
-plist = {'chi','xiw','xip','rhor','kappap','kappan','std_Ey'};
+load P
+plist = fieldnames(P);
 
 % Set to a larger number in practice.
 nsim = 100;
@@ -62,19 +60,22 @@ nsim = 100;
 fprintf('Resample %g times from calibrated model.\n',nsim);
 
 % Simulate a total of nsim artificial data, length 40 periods.
-d = resample(m,[],1:40,nsim,'deviation=',false);
-d = rmfield(d,'Wage');
+range = 1:40;
+d = resample(m,[],range,nsim);
 
 disp('Compute Hessians for each draw and average them.');
 
-[mloglik,s,F1] = diffloglik(m,d,1:40,plist, ...
-   'deviation=',true,'relative=',false,'progress=',true);
+load read_data.mat d
+range = dbrange(d); range(1) = []; % drop 1959Q2
+
+[mloglik,s,F1] = diffloglik(m,d,range,plist, ...
+   'sstate=',true,'relative=',false,'objRange=',range(3:end),'progress=',true);
 
 F1 = mean(F1,3);
 
 disp('Compute information matrix in frequency domain.');
 [F2,F2i,d] = fisher(m,40,plist, ...
-    'deviation=',false,'exclude=',{'Wage'},'progress=',true);
+    'deviation=',false,'progress=',true);
 
 format shortEng;
 disp('Compare time-domain and frequency domain info matrices.');

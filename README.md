@@ -9,7 +9,7 @@ estimate_params.m - main program that reads the model file (linear or nonlinear 
 
 filter_hist_data.m - shock decomposition and historical simulations
 
-P.mat - contains the parameter struct with the max posterior mode
+estimate_params.mat - contains the parameter struct est with the max posterior mode
 
 priors.m - contains the priors and lower and upper bounds on parameters
 

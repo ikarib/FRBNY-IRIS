@@ -92,7 +92,7 @@
 !if bgg
     'Steady state price level !! \pi^*' pistar, pistar_ = .5 % quarterly percentage
     'Default probability !! F(\omega)' Fom, Fom_ = .03 % annual percentage
-    'Elasticity of spread to volatility of entrepreneurial capital shock !! \zeta_{sp,sigw}' zeta_spsigw
+    'Elasticity of spread to volatility of entrepreneurial capital !! \zeta_{sp,sigw}' zeta_spsigw
     'Elasticity of spread to exogenous bankruptcy costs !! \zeta_{sp,mue}' zeta_spmue
 !end
 zstar,betbar
@@ -257,11 +257,24 @@ zstar,betbar
     obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp!for$[1:nant]$!do,obs_exprate?!end
 !end
 !transition_shocks
-g_sh,b_sh,mu_sh,z_sh,zp_sh,laf_sh,law_sh,rm_sh,pist_sh
+'Government spending shock' g_sh
+'Asset shock' b_sh
+'MEI shock' mu_sh
+'Productivity shock' z_sh
+'Long run productivity shock' zp_sh
+'Price mark-up shock' laf_sh
+'Wage mark-up shock' law_sh
+'Monetary policy shock' rm_sh
+'Inflation target shock' pist_sh
 !if bgg
-    sigw_sh,mue_sh,gamm_sh
+    'Entrepreneurial volatility shock' sigw_sh
+    'Spread shock' mue_sh
+    'Net worth shock' gamm_sh
 !end
-lr_sh,tfp_sh,gdpdef_sh,pce_sh
+'Long run rate measur.shock' lr_sh
+'Fernald TFP measur.shock' tfp_sh
+'GDP Deflator measur.shock' gdpdef_sh
+'Core PCE measur.shock' pce_sh
 % innovation for new anticipated shocks, calculated in period T only
 !for$[1:nant]$!do,rm_sh?!end
 
@@ -418,11 +431,11 @@ lr_sh,tfp_sh,gdpdef_sh,pce_sh
 ztil = rho_z*ztil{-1} + z_sh !! ztil = 0; % 8.2
 'Extra term for long run changes to productivity; added by MDC  !! eq_zp'
 zp = rho_zp*zp{-1} + zp_sh !! zp = 0;
-'Government spending !! eq_g'
+'Government spending shock !! eq_g'
 g = rho_g*g{-1} + g_sh + eta_gz*z_sh !! g = 0; % 8.29
 'Asset shock !! eq_b'
 b = rho_b*b{-1} + b_sh*(-sigmac*(1+h*exp(-zstar))/(1-h*exp(-zstar))) !! b = 0; % 8.30
-'Investment specific technology !! eq_mu'
+'Investment specific technology shock !! eq_mu'
 mu = rho_mu*mu{-1} + mu_sh !! mu = 0; % 8.31
 'Monetary policy shock !! eq_rm'
 rm = rho_rm*rm{-1} + rm_sh !if nant>0;+ rm1{-1}!end !! rm = 0; % 8.32

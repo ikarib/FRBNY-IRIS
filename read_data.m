@@ -201,7 +201,7 @@ maxabs(h,f)
 
 %% Load sample dataset provided for the 2015 Nov 27 vintage in Julia package
 %
-d = dbload('data_151127.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 
 %% Plot Data
 %

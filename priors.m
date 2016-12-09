@@ -88,7 +88,7 @@ E.std_gdpdef_sh = {P.std_gdpdef_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
 E.std_pce_sh = {P.std_pce_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
 
 % Priors on standard deviations of the anticipated policy shocks
-for v = sprintfc('std_rm_sh%d',1:min(o.nant,12))
+for v = sprintfc('std_rm_sh%d',1:12)
     E.(v{1}) = {P.(v{1}), 1E-5, Inf, logdist.scaleinvchisq(.2,4)};
 end
 

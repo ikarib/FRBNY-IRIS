@@ -14,3 +14,5 @@ estimate_params.mat - contains the parameter struct est with the max posterior m
 priors.m - contains the priors and lower and upper bounds on parameters
 
 These programs require my IRIS fork which is available at https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev
+
+The problem with csminwel is by being unconstrained minimization algorithm, we don't know if any of the constraints will become binding at the mode. For example, parameter \rho_sigw becomes binding at upper level 0.99. Then the algorithm slows down to a crawl since the unscaled parameter tries to go to infinity. We therefore have to change the limit to 0.999, but we don't know this beforehand.

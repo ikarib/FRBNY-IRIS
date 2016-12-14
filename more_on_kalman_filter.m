@@ -1,5 +1,4 @@
 %% More on Kalman Filter
-% by Jaromir Benes
 %
 % Run more advanced Kalman filter exercises. Split the data sample into two
 % sub-samples, and pass information from one to the other. Run the filter
@@ -12,10 +11,8 @@
 % Clear workspace, close all graphics figures, clear command window, and
 % check the IRIS version.
 
-clear;
-close all;
-clc;
-irisrequired 20140401;
+clear; clc; close all
+irisrequired 20151016
 %#ok<*NOPTS>
 
 %% Load the estimated model object and the historical database
@@ -71,7 +68,7 @@ dbfun(@maxabs,pe0,pe1)
 disp('Smoothed estimates are identical for the last sub-sample');
 dbfun(@maxabs,f0.mean,f2.mean)
 dbfun(@maxabs,pe0,pe1)
-
+return
 %% Run Kalman Filter with Time Varying Std Devs of Some Shocks
 %
 % Use the option `'vary='` to temporarily change some of the std deviations
@@ -139,6 +136,7 @@ sum(mll(2:end))
 % database in those.
 
 x = tseries(range,mll(2:end));
+figure()
 bar(x);
 grid on;
 title('Contributions of Individual Time Periods to (Minus Log) Likelihood');

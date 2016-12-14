@@ -237,67 +237,13 @@ barcon(plotrange,cg.obs_nominalrate{:,1:end-2}*4);
 grid on;
 title('Contributions of Shocks');
 legend(leg,'location','northWest');
+
 %% Save Output Data for Future Use
 %
 % Save the output database `f` from the basic run of the filter in a
 % mat-file (binary file) for future use.
 
 save filter_hist_data.mat f;
-
-%% Evaluate Likelihood Function and Contributions of Individual Time Periods
-%
-% Run the function `loglik` to evaluate the likelihood function. This
-% function calls the very same Kalman filter as the function `filter`. The
-% first output argument returned by `loglik` is minus the logarithm of the
-% likelihood function; this value is also used as a criterion to be
-% minimized (which means maximizing likelihood) within the function
-% `estimate`.
-%
-% Set the option `'objDecomp='` to `true` <?objDecomp?> to obtain not only
-% the overall likelihood, but also the contributions of individual time
-% periods. They are stowed in a column vector with the overall likelihood
-% at the top; the length of the vector is therefore nPer+1 <?length?> where
-% nPer is the number of periods over which the filter is run.
-
-Range = startHist:endHist+10;
-nPer = length(Range)
-
-mll = loglik(mest,d,Range,'relative=',false,'objDecomp=',true); %?objDecomp?
-
-size(mll) %?length?
-
-% ...
-%
-% Because there were no observations available in the input database `d` in
-% the last 10 periods of the filter range, i.e. `endHist+1:endHist+10`, the
-% contributions of these last 10 periods are zero.
-
-mll 
-
-% ...
-%
-% Adding up the individual contributions reproduces, of course, the overall
-% likelihood. The following two numbers are the same (up to rounding
-% errors):
-
-mll(1)    
-sum(mll(2:end))
-
-
-% ...
-%
-% Visualize the contributions by converting them to a tseries object, and
-% plotting as a bar graph. Large bars denote periods where the model
-% performed poorly (rememeber, this is MINUS the log likelihood, ie. the
-% larger the number the smaller the actual likelihood). Again, the last 10
-% periods are zeros because no observations were available in the input
-% database in those.
-
-x = tseries(Range,mll(2:end));
-figure()
-bar(x);
-grid on;
-title('Contributions of Individual Time Periods to (Minus Log) Likelihood');
 
 %% Help on IRIS Functions Used in This Files
 %

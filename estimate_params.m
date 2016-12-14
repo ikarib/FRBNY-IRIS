@@ -172,7 +172,7 @@ legend('Prior Density','Posterior Mode','Posterior Density', ...
 
 %% Save Model Object with Estimated Parameters
 
-save estimate_params.mat mest pos E theta logpost;
+save estimate_params.mat mest o pos E theta logpost;
 
 %% Help on IRIS Functions Used in This File
 %

@@ -106,7 +106,7 @@ zstar,betbar
         zwstar,sigwstar,omegabarstar,Gammastar,dGdomegastar,dGammadomegastar,d2Gammadomegadsigmastar,d2Gdomegadsigmastar,dg,GammamuG,GammamuGprime,zeta_bw,zeta_bw_zw,wekstar,dGammadsigmastar,dGdsigmastar,zeta_bmue,Rkstar,zeta_bsigw % dlinks
     !end
 !end
-!links % IRIS does not order dynamic links recursively. We have to do it ourself (error prone!)
+!links
     gam := gam_/100;
     bet := 1/(1+bet_/100);
     sprd := (1+sprd_/100)^(1/4); % from annual perc to quarterly number
@@ -256,7 +256,7 @@ zstar,betbar
     !log_variables
     !all_but
     z,ztil,zp,g,b,mu,rm,laf1,law1,pist,lr,tfp,gdpdef,pce!for$[1:nant]$!do,rm?!end
-    obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp!for$[1:nant]$!do,obs_exprate?!end
+    obs_gdp,obs_hours,obs_wages,obs_gdpdeflator,obs_corepce,obs_nominalrate,obs_consumption,obs_investment,obs_spread,obs_longinflation,obs_longrate,obs_tfp!for$[1:nant]$!do,obs_ois?!end
 !end
 !transition_shocks
 'Government spending shock' g_sh
@@ -545,7 +545,7 @@ E_R = movavg(R_s{1},40) !! E_R = R_s;
 '10-year Interest Rate' obs_longrate
 'Total Factor Productivity' obs_tfp
 !for$[1:nant]$!do
-    '' obs_exprate?
+    'OIS expectations of ?-period-ahead interest rates at a quarterly rate' obs_ois?
 !end
 !measurement_equations
 'Output Growth (Bureau of Economic Analysis) - Quarterly!'
@@ -623,9 +623,9 @@ E_R = movavg(R_s{1},40) !! E_R = R_s;
 !for$[1:nant]$!do
     'Expected FFR derived from OIS quotes (BCFF survey)'
     !if linear
-        obs_exprate? = E_R? + Rstarn;
+        obs_ois? = E_R? + Rstarn;
     !else
-        obs_exprate? = log(E_R?/$R_s) + 100*($R_s-1);
+        obs_ois? = log(E_R?/$R_s) + 100*($R_s-1);
     !end
 !end
 !reporting_equations

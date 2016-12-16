@@ -145,12 +145,10 @@ zstar,betbar
             d2Gdomegadsigmastar := -dGdomegastar*(1-zwstar*(zwstar-sigwstar))/sigwstar;
             dg := dGdomegastar/dGammadomegastar;
 
-            % a couple of combinations
-            GammamuG := Gammastar-muestar*Gstar;
-            GammamuGprime := dGammadomegastar-muestar*dGdomegastar;
-
             % evaluate mu, nk, and Rhostar
             muestar := (1-1/sprd)/(dg*(1-Gammastar)+Gstar);
+            GammamuG := Gammastar-muestar*Gstar;
+            GammamuGprime := dGammadomegastar-muestar*dGdomegastar;
             nkstar := 1-sprd*GammamuG;
             Rhostar := 1/nkstar-1;
 
@@ -173,11 +171,6 @@ zstar,betbar
             zeta_zmue := -muestar*Gstar/GammamuG;
             zeta_spmue := (zeta_bw_zw*zeta_zmue-zeta_bmue)/(1-zeta_bw_zw);
 
-            % some ratios/elasticities
-            Rkstar := sprd*rstar*pistar;
-            zeta_Gw := dGdomegastar/Gstar*omegabarstar;
-            zeta_Gsigw := dGdsigmastar/Gstar*sigwstar;
-
             % elasticities wrt sigw
             zeta_bsigw := sigwstar*(((1-muestar*dGdsigmastar/dGammadsigmastar)/
                 (1-muestar*dGdomegastar/dGammadomegastar)-1)*dGammadsigmastar*sprd+
@@ -185,6 +178,11 @@ zstar,betbar
                 GammamuGprime^2)/((1-Gammastar)*sprd+dGammadomegastar/GammamuGprime*(1-nkstar));
             zeta_zsigw := sigwstar*(dGammadsigmastar-muestar*dGdsigmastar)/GammamuG;
             zeta_spsigw := (zeta_bw_zw*zeta_zsigw-zeta_bsigw)/(1-zeta_bw_zw);
+
+            % some ratios/elasticities
+            Rkstar := sprd*rstar*pistar;
+            zeta_Gw := dGdomegastar/Gstar*omegabarstar;
+            zeta_Gsigw := dGdsigmastar/Gstar*sigwstar;
 
             % elasticities for the net worth evolution
             zeta_nRk := gammstar*Rkstar/pistar/exp(zstar)*(1+Rhostar)*(1-muestar*Gstar*(1-zeta_Gw/zeta_zw));

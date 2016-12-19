@@ -1,5 +1,4 @@
 %% Forecasts with Judgmental Adjustments
-% by Jaromir Benes
 %
 % Use the Kalman filtered data as the starting point for forecasts, both
 % unconditional and conditional, i.e. with various types of judgmental
@@ -10,10 +9,8 @@
 % Clear workspace, close all graphics figures, clear command window, and
 % check the IRIS version.
 
-clear;
-close all;
-clc;
-irisrequired 20140315;
+clear; clc; close all
+irisrequired 20151016
 
 %% Load Estimated Model Object, Filtered Data, and Historical Database
 %
@@ -22,7 +19,7 @@ irisrequired 20140315;
 % historical database created in `read_data`. Run `estimate_params` and
 % `filter_hist_data` at least once before running this m-file.
 
-load estimate_params.mat mest;
+load estimate_params.mat mest o;
 load filter_hist_data.mat f;
 load read_data.mat d startHist endHist;
 
@@ -77,18 +74,30 @@ u.std = dboverlay(f.std,u.std);
 % functions after each forecast experiment.
 
 plotList1 = { ...
-    ' "Short Rate, PA" [mean.Short, mean.Short+std.Short, mean.Short-std.Short]', ...
-    ' "Inflation, Q/Q PA", [mean.Infl, mean.Infl+std.Infl, mean.Infl-std.Infl]', ...
-    ' "Output Growth, Q/Q PA" [mean.Growth, mean.Growth+std.Growth, mean.Growth-std.Growth]', ...
-    ' "Wage Inflation, Q/Q PA" [mean.Wage, mean.Wage+std.Wage, mean.Wage-std.Wage]', ...
+    ' "Interest Rate, Q/Q PA" [mean.obs_nominalrate, mean.obs_nominalrate+std.obs_nominalrate, mean.obs_nominalrate-std.obs_nominalrate]*4', ...
+    ' "Core PCE Inflation, Q/Q PA", [mean.obs_corepce, mean.obs_corepce+std.obs_corepce, mean.obs_corepce-std.obs_corepce]*4', ...
+    ' "Output Growth, Q/Q PA" [mean.obs_gdp, mean.obs_gdp+std.obs_gdp, mean.obs_gdp-std.obs_gdp]*4', ...
+    ' "Real Wage Growth, Q/Q PA" [mean.obs_wages, mean.obs_wages+std.obs_wages, mean.obs_wages-std.obs_wages]*4', ...
     };
 
 plotList2 = { ...
-	' "Consumption Demand Shocks" mean.Ey', ...
-    ' "Cost Push Shocks" mean.Ep', ...
-    ' "Productivity Shocks" mean.Ea', ...
-    ' "Policy Shocks" mean.Er', ...
-    ' "Wage Shocks" mean.Ew', ...
+	' "Government Spending Shocks" mean.g_sh', ...
+    ' "Cost Push Shocks" mean.laf_sh', ...
+    ' "Productivity Shocks" mean.z_sh', ...
+    ' "Policy Shocks" mean.rm_sh', ...
+    ' "Wage Shocks" mean.law_sh', ...
+    ' mean.g_sh ', ...
+    ' mean.b_sh ', ...
+    ' mean.mu_sh ', ...
+    ' mean.zp_sh ', ...
+    ' mean.pist_sh ', ...
+    ' mean.sigw_sh ', ...
+    ' mean.mue_sh ', ...
+    ' mean.gamm_sh ', ...
+    ' mean.lr_sh ', ...
+    ' mean.tfp_sh ', ...
+    ' mean.gdpdef_sh ', ...
+    ' mean.pce_sh ', ...
     };
 
 %% Report Unconditional Forecast
@@ -116,11 +125,11 @@ grfun.ftitle('Unconditional Forecasts');
 % mode.
 
 p1 = plan(mest,startFcst:endFcst);
-p1 = exogenize(p1,'Short',startFcst:startFcst+3);
-p1 = endogenize(p1,'Er',startFcst:startFcst+3);
+p1 = exogenize(p1,'obs_nominalrate',startFcst:startFcst+3);
+p1 = endogenize(p1,'rm_sh',startFcst:startFcst+3);
 
 f1 = f;
-f1.mean.Short(startFcst:startFcst+3,1) = f.mean.Short(endHist);
+f1.mean.obs_nominalrate(startFcst:startFcst+3,1) = f.mean.obs_nominalrate(endHist);
 
 detail(p1,f1);
 
@@ -149,18 +158,18 @@ grfun.ftitle('Unconditional vs Exogenized Short Rate');
 % means that all agents know the future shocks from the very beginning.
 
 mest1 = mest;
-mest1.std_Er = 0;
+mest1.std_rm_sh = 0;
 
 get(mest,'std') & get(mest1,'std') %#ok<NOPTS>
 
 p2 = plan(mest1,startFcst:endFcst);
-p2 = condition(p2,'Short',startFcst:startFcst+3);
+p2 = condition(p2,'obs_nominalrate',startFcst:startFcst+3);
 
 f2 = f;
-f2.mean.Short(startFcst:startFcst+3) = f2.mean.Short(endHist);
+f2.mean.obs_nominalrate(startFcst:startFcst+3) = f2.mean.obs_nominalrate(endHist);
 
 c = struct();
-c.Short = f2.mean.Short;
+c.obs_nominalrate = f2.mean.obs_nominalrate;
 
 detail(p2,f2);
 
@@ -210,14 +219,14 @@ grfun.ftitle('Unconditional vs Conditional on Unanticipated Short Rate');
 
 p4 = plan(mest,startFcst:endFcst);
 
-p4 = exogenise(p4,'Short',startFcst:startFcst+3);
-p4 = endogenise(p4,'Er',startFcst:startFcst+3);
+p4 = exogenise(p4,'obs_nominalrate',startFcst:startFcst+3);
+p4 = endogenise(p4,'rm_sh',startFcst:startFcst+3);
 
-p4 = condition(p4,'Infl',startFcst:startFcst+3);
+p4 = condition(p4,'obs_corepce',startFcst:startFcst+3);
 
 f4 = f;
-f4.mean.Short(startFcst:startFcst+3) = f4.mean.Short(endHist);
-f4.mean.Infl(startFcst:startFcst+3) = f4.mean.Infl(endHist);
+f4.mean.obs_nominalrate(startFcst:startFcst+3) = f4.mean.obs_nominalrate(endHist);
+f4.mean.obs_corepce(startFcst:startFcst+3) = f4.mean.obs_corepce(endHist);
 
 j4 = jforecast(mest1,f4,startFcst:endFcst+50,'plan=',p4);
 
@@ -227,12 +236,12 @@ j4 = jforecast(mest1,f4,startFcst:endFcst+50,'plan=',p4);
 % forecasts with the values we supplied in the input database.
 
 disp('Interest rate forecast and tunes');
-[j4.mean.Short{startFcst:startFcst+3}, ...
-    f4.mean.Short{startFcst:startFcst+3}] %#ok<NOPTS>
+[j4.mean.obs_nominalrate{startFcst:startFcst+3}, ...
+    f4.mean.obs_nominalrate{startFcst:startFcst+3}] %#ok<NOPTS>
 
 disp('Inflation forecast and conditions');
-[j4.mean.Infl{startFcst:startFcst+3}, ...
-    f4.mean.Infl{startFcst:startFcst+3}] %#ok<NOPTS>
+[j4.mean.obs_corepce{startFcst:startFcst+3}, ...
+    f4.mean.obs_corepce{startFcst:startFcst+3}] %#ok<NOPTS>
 
 %% Compare Exogenised/Conditional Forecasts with Unconditional Forecasts
 

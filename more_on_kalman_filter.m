@@ -21,7 +21,7 @@ irisrequired 20151016
 % historical database created in `read_data`. Run `estimate_params` at
 % least once before running this m-file.
 
-load estimate_params.mat mest;
+load estimate_params.mat mest o;
 load read_data.mat d startHist endHist;
 
 %% Split the Kalman filter into sub-samples
@@ -68,7 +68,7 @@ dbfun(@maxabs,pe0,pe1)
 disp('Smoothed estimates are identical for the last sub-sample');
 dbfun(@maxabs,f0.mean,f2.mean)
 dbfun(@maxabs,pe0,pe1)
-return
+
 %% Run Kalman Filter with Time Varying Std Devs of Some Shocks
 %
 % Use the option `'vary='` to temporarily change some of the std deviations
@@ -77,13 +77,14 @@ return
 % `Ep` shocks from the previous Kalman filter (with fixed std deviations)
 % and the Kalman filter with time-varying `std_Ep` <?compareEp?>.
 
-j = struct();
-j.std_Ep = tseries();
-j.std_Ep(endHist-9:endHist-5) = linspace(0.00,0.4,5);
+o.nant = 6;
+J = struct;
+J.std_mue_sh = tseries;
+J.std_mue_sh(qq(2008,4):endHist) = 0.02;
 
-[~,f1] = filter(mest,d,startHist:endHist,'vary=',j);
+[~,f1] = filter(mest,d,startHist:endHist+10,'relative=',false,'objRange=',startHist+2:endHist,'vary=',J);
 
-[j.std_Ep,f1.mean.Ep,f0.mean.Ep] %?compareEp?
+[J.std_mue_sh,f1.mean.mue_sh,f0.mean.mue_sh] %?compareEp?
 
 %% Evaluate Likelihood Function and Contributions of Individual Time Periods
 %

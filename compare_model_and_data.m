@@ -1,5 +1,4 @@
 %% Compare Second Moment Properties in Model and Data
-% by Jaromir Benes
 %
 % Compute and compare several second-moment properties of the estimated
 % model and the data. Describe the data using an estimated VAR; this also
@@ -11,10 +10,8 @@
 % Clear workspace, close all graphics figures, clear command window, and
 % check the IRIS version.
 
-clear;
-close all;
-clc;
-irisrequired 20140315;
+clear; clc; close all
+irisrequired 20151016
 
 %% Load Estimated Model Object, and Historical Database
 %
@@ -125,9 +122,9 @@ Nv = Nv(inx);
 figure();
 for i = 1 : length(ylist)
     for j = i : length(ylist)
-        subplot(4,4,(i-1)*4+j);
+        subplot(12,12,(i-1)*12+j);
         helper_plot_acf(CNv(i,j,1,:),Cv(i,j,1),Cm(i,j,1)); %?helper_plot_acf?
-        title(sprintf('Cross-covariance %s x %s',ylist{i},ylist{j}));
+        title(sprintf('%s x %s',ylist{i},ylist{j}),'Interpreter','none');
     end
 end
 
@@ -154,9 +151,9 @@ maxabs(Cv1+Cv2+Cv3 - Cv)
 figure();
 for i = 1 : length(ylist)
     for j = i : length(ylist)
-        subplot(4,4,(i-1)*4+j);
+        subplot(12,12,(i-1)*12+j);
         helper_plot_acf(CNv1(i,j,1,:),Cv(i,j,1),Cm1(i,j,1));
-        title(sprintf('Cross-cov %s x %s',ylist{i},ylist{j}));
+        title(sprintf('%s x %s',ylist{i},ylist{j}));
     end
 end
 
@@ -184,7 +181,7 @@ freq = 0 : 0.05 : pi;
 figure();
 
 for i = 1 : length(ylist)
-    subplot(2,2,i);
+    subplot(3,4,i);
     helper_plot_xsf(freq,Sv(i,i,:),Sm(i,i,:)); %?helper_plot_xsf?
     title(sprintf('Spect density %s',ylist{i}));
 end

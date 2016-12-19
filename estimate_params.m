@@ -24,7 +24,8 @@ load read_linear_model.mat m o;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-init = get(m,'parameters')
+% init = get(m,'parameters')
+load init
 E = priors(init,o);
 disp(E)
 
@@ -57,7 +58,7 @@ ftitle(h.figure,'Prior Distributions');
 %     J.(v{1})=tseries(qq(2008,4):endHist,0.2);
 % end
 filterOpt = {'relative=',false,'objRange=',startHist+2:endHist}; % ,'vary=',J
-optimSet = {'MaxFunEvals=',10000,'MaxIter=',100,'TolFun=',1e-10,'UseParallel=',false};
+optimSet = {'MaxFunEvals=',10000,'TolFun=',1e-16};
 tic
 [est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt, ...
     'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');

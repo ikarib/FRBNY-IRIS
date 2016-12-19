@@ -158,12 +158,14 @@ F.SVENY10 = tseries(dates,data(:,10));
 % data = xlsread(fname,'B1827:Q1841');
 % dates = qq(floor(data(1,:)),round(rem(data(1,:),1)*10));
 % MA_pop = tseries(dates,round(data(15,:)'*1000,4));
-MA_pop = tseries(qq(2016,1),[252580.6732 253179.9927 253854.9957 254537.0789 255173.8892 255804.9622 256407.6233 257010.2539 257612.9456 258215.6067 258818.2068 259420.7764 260023.3765 260625.9460 261231.4148 261836.8835]');
+% clear url fname data dates 
+MA_pop = tseries(qq(2014,4),[248842.6666 249799.5291 250273.88 250785.5347 251296.4105 251808.0652 252319.7198 252831.3745 253343.8079 253855.4625 254367.8959 254879.5506 255391.984]');
+% MA_pop = tseries(qq(2016,1),[252580.6732 253179.9927 253854.9957 254537.0789 255173.8892 255804.9622 256407.6233 257010.2539 257612.9456 258215.6067 258818.2068 259420.7764 260023.3765 260625.9460 261231.4148 261836.8835]');
 % Convert monthly population series to quarterly
 % the default conversion method is simple averaging.
-H.POP = hpf([MA_pop;convert(H.LN16N{mm(1959,1):mm(2016,9)},4)],@all);
-F.POP = hpf([MA_pop;convert(F.CNP16OV{mm(1959,1):mm(2016,9)},4)],@all);
-clear url fname data dates MA_pop
+H.POP = hpf([MA_pop;convert(H.LN16N,4)],[qq(1959,1),Inf]);
+F.POP = hpf([MA_pop;convert(F.CNP16OV,4)],[qq(1959,1),Inf]);
+clear MA_pop
 
 %% Create Model Consistent Variable Names
 %
@@ -210,7 +212,7 @@ f.obs_tfp = (F.DTFP-nanmean(F.DTFP))/(4*(1-F.ALPHA));
 disp('Database differences (Haver vs Fred)');
 maxabs(h,f)
 
-dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],'comment=',false,'class=',false,'format=','%.16g');
+dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',false,'class=',false,'format=','%.16g');
 
 %% Load dataset from CSV file
 %

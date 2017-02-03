@@ -58,17 +58,11 @@ endDate = 40;
 
 d = zerodb(m,startDate:endDate);
 d.g_sh(startDate) = log(1.1);
-s = simulate(m,d,1:endDate,'deviation=',true);
-s = dboverlay(d,s);
-s %#ok<NOPTS>
-
 s1 = simulate(m,d,1:endDate,'deviation=',true);
 
 %% Report Simulation Results
 %
 % Use the `dbplot` function to create a quick report of simulation results.
-% Note how we use the `'transform='` option <?transform?> to plot percent
-% deviations of individual variables.
 
 plotRng = startDate : startDate+14;
 plotList = { ...
@@ -82,8 +76,7 @@ plotList = { ...
 	' "Spread" obs_spread ', ...
     ' "Total Factor Productivity" obs_tfp ', ...
    };
-dbplot(s1,plotRng,plotList, ...
-   'tight=',true,'transform=',@(x) 100*(exp(x)-1)); %?transform?
+dbplot(s1,plotRng,plotList,'tight=',true);
 grfun.ftitle('Responses to Government Spending Shock -- Deviations from Control');
 
 %% Simulate Shock in Full Levels
@@ -101,8 +94,7 @@ d.g_sh(startDate) = log(1.1);
 s = simulate(m,d,1:endDate);
 s = dboverlay(d,s);
 
-dbplot(s1 & s,plotRng,plotList, ... %?at?
-   'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s1 & s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Responses to Government Spending Shock -- Full Levels');
 
 %% In linear model there should be no difference between s1 and s for variables with zero steady states

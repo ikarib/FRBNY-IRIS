@@ -145,8 +145,9 @@ plotneigh(n,'linkaxes=',true,'subplot=',[4,7], ...
 N = 1000
 
 tic;
-[theta,logpost,ar] = arwm(pos,N, ...
-    'progress=',true,'adaptScale=',2,'adaptProposalCov=',1,'burnin=',0.20);
+% [theta,logpost,ar] = arwm(pos,N, ...
+%     'progress=',true,'adaptScale=',2,'adaptProposalCov=',1,'burnin=',0.20);
+[theta,logpost,ar] = arwm(pos,N,'estTime=',true,'adaptScale=',0,'adaptProposalCov=',0,'burnin=',0.1,'firstPrefetch=',Inf,'initScale=',.09);
 toc;
 
 disp('Final acceptance ratio');

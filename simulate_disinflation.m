@@ -68,9 +68,7 @@ plotList = { ...
 	' "Spread" obs_spread ', ...
     ' "Total Factor Productivity" obs_tfp ', ...
    };
-dbplot(s,plotRng,plotList, ...
-   'tight=',true,'highlight=',startDate-5:startDate-1, ...
-   'transform=',@(x) 100*(x-1));
+dbplot(s,plotRng,plotList,'tight=',true,'highlight=',startDate-5:startDate-1);
 grfun.ftitle('Disinflation');
 
 %% Sacrifice Ratio
@@ -93,7 +91,7 @@ s = simulate(m,d1,startDate:endDate);
 s = dboverlay(d1,s);
 s = dbminuscontrol(m,s,d1);
 
-dbplot(s,plotRng,plotList,'tight=',true,'transform=',@(x) 100*(x-1));
+dbplot(s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Disinflation with More Flexible Prices');
 
 disp('Cumulative output gap (sacrifice ratio):');

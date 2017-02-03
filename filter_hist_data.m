@@ -46,12 +46,12 @@ load read_data.mat d startHist endHist;
 list = get(mest,'elist');
 
 dbplot(f.mean,startHist:endHist,list, ...
-    'tight=',true,'zeroline=',true,'transform=',@(x) 100*x);
+    'tight=',true,'zeroline=',true);
 ftitle('Estimated shocks');
 
 dbplot(f.mean,startHist:endHist,list, ...
     'tight=',true,'zeroLine=',true,'plotfunc=',@hist, ...
-    'title',get(mest,'eDescript'),'transform=',@(x) 100*x);
+    'title',get(mest,'eDescript'));
 ftitle('Histograms of Estimated Transition Shocks');
 
 %% K-Step-Ahead Kalman Predictions
@@ -137,52 +137,47 @@ c.obs_corepce
 % first $n$ columns.
 
 figure();
-plotrange = qq(2007,1):endHist;
+plotrange = qq(1990,1):endHist;
+nz=any(c.obs_gdp); nz(end-1)=0;
 
 subplot(2,3,1);
-plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end}]*4);
+plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end-1}]*4);
 grid on;
 title('Output Growth, Q/Q PA');
 legend('Actual data','Steady State + Init Cond', ...
     'location','northWest');
 
 subplot(2,3,4);
-barcon(plotrange,c.obs_gdp{:,1:end-2}*4);
+barcon(plotrange,c.obs_gdp{:,nz}*4);
 grid on;
 title('Contributions of shocks');
 
-edescript = get(mest,'eDescript');
-legend(edescript{:},'location','northWest');
-
 subplot(2,3,2);
-plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end}]*4);
+plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end-1}]*4);
 grid on;
 title('Core PCE Inflation, Q/Q PA');
 legend('Actual data','Steady State + Init Cond', ...
     'location','northWest');
 
 subplot(2,3,5);
-barcon(plotrange,c.obs_corepce{:,1:end-2}*4);
+barcon(plotrange,c.obs_corepce{:,nz}*4);
 grid on;
 title('Contributions of shocks');
 
-edescript = get(mest,'eDescript');
-legend(edescript{:},'location','northWest');
-
 subplot(2,3,3);
-plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end}]*4);
+plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end-1}]*4);
 grid on;
 title('Interest Rate, Q/Q PA');
 legend('Actual data','Steady State + Init Cond', ...
     'location','northWest');
 
 subplot(2,3,6);
-barcon(plotrange,c.obs_nominalrate{:,1:end-2}*4);
+barcon(plotrange,c.obs_nominalrate{:,nz}*4);
 grid on;
 title('Contributions of shocks');
 
 edescript = get(mest,'eDescript');
-legend(edescript{:},'location','northWest');
+legend(edescript{nz},'location','northWest');
 
 %% Plot Grouped Contributions
 %

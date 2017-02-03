@@ -44,7 +44,7 @@ plotList = { ...
 	' "Spread" obs_spread ', ...
     ' "Total Factor Productivity" obs_tfp ', ...
    };
-dbplot(s,plotRng,plotList,'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Responses to Unanticipated Government Spending Shock');
 
 %% Anticipated vs Unanticipated Government Spending Shock
@@ -60,8 +60,7 @@ s1 = dbextend(d,s1);
 s2 = simulate(m,d,startDate:endDate,'deviation=',true,'anticipate=',false);
 s2 = dbextend(d,s2);
 
-dbplot(s1 & s2,plotRng,plotList, ...
-    'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s1 & s2,plotRng,plotList,'tight=',true);
 grfun.ftitle('Government Spending Shock: Anticipated vs Unanticipated');
 grfun.bottomlegend('Anticipated','Unanticipated');
 
@@ -101,8 +100,7 @@ s3 = simulate(m,d,startDate:endDate, ... %?delayedunanticipated?
    'deviation',true,'plan',p,'anticipate',false);
 s3 = dbextend(d,s3);
 
-dbplot(s1 & s2 & s3,plotRng,plotList, ...
-    'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s1 & s2 & s3,plotRng,plotList,'tight=',true);
 grfun.ftitle('Government Spending Shock with Delayed Policy Reaction');
 grfun.bottomlegend('No delay','Anticipated','Unanticipated');
 
@@ -122,7 +120,7 @@ s = dbextend(d,s);
 
 disp(s.g_sh{1:10});
 
-dbplot(s,plotRng,plotList,'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Government Spending Shock with Exact Impact');
 
 %% Simulate Government Spending Shocks with Multiple Parameterisations
@@ -150,7 +148,7 @@ d.g_sh(1,:) = log(1.1);
 s = simulate(m,d,startDate:endDate,'deviation=',true);
 s = dbextend(d,s);
 
-dbplot(s,plotRng,plotList,'tight=',true,'transform=',@(x) 100*(exp(x)-1));
+dbplot(s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Government Spending Shock with Mutliple Parameterisations');
 legend(sprintfc('\\zeta_p=%g',m.zeta_p),'location','northWest');
 

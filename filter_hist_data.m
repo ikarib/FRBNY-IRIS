@@ -39,11 +39,12 @@ load read_data.mat d startHist endHist;
 
 %% Plot Estimated Shocks
 %
-% The measurement shocks are kept turned off in our exercises (i.e. their
-% standard errors are zero), and hence their estimates are zero throughout
-% the historical sample.
+% The shocks to spread and net worth are kept turned off in our exercises
+% (i.e. their standard errors are zero), and hence their estimates are zero
+% throughout the historical sample.
 
 list = get(mest,'elist');
+list = setdiff(list,{'mue_sh','gamm_sh'},'stable');
 
 dbplot(f.mean,startHist:endHist,list, ...
     'tight=',true,'zeroline=',true);

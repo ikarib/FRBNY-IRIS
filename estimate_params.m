@@ -20,12 +20,11 @@ irisrequired 20151016
 % created in `read_data`. Run `read_linear_model` and `read_data` at least once
 % before running this m-file.
 
-load read_linear_model.mat m o;
+load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-% init = get(m,'parameters')
-load init
+init = get(m,'parameters');
 E = priors(init,o);
 disp(E)
 
@@ -52,21 +51,15 @@ ftitle(h.figure,'Prior Distributions');
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
-% J = struct;
-% for v=sprintfc('std_rm_sh%d',1:o.nant)
-%     J.(v{1})=tseries(startHist,0);
-%     J.(v{1})=tseries(qq(2008,4):endHist,0.2);
-% end
-filterOpt = {'relative=',false,'objRange=',startHist+2:endHist}; % ,'vary=',J
+J = struct;
+for v=sprintfc('std_rm_sh%d',1:o.nant)
+    J.(v{1})=tseries(startHist:qq(2008,3),0);
+end
+filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
 optimSet = {'MaxFunEvals=',10000,'TolFun=',1e-16};
 tic
-[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt, ...
-    'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
+[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
 toc
-
-%% User Supplied Optimisation Routine
-% [est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt, ...
-%     'solver=',@mycsminwel,'sstate=',true,'nosolution=','penalty');
 
 %% Print Estimation Results
 disp('Point estimates');
@@ -96,7 +89,7 @@ legend('Prior Density','Starting Value','Posterior Mode','Lower Bound','Upper Bo
 % optimisation routine.
 
 plist = fieldnames(E);
-std = sqrt(diag(inv(H{1})));
+std = sqrt(diag(C));
 disp('Std deviations of parameter estimates');
 [char(plist), num2str(std,': %-g') ]
 

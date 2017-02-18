@@ -25,7 +25,7 @@ irisrequired 20151016
 o = struct;
 o.kimball = true; % Kimball aggregator
 o.bgg = true; % BGG financial frictions
-o.nant = 0; % Number of anticipated policy shocks
+o.nant = 6; % Number of anticipated policy shocks
 
 m = model('frbny.model','assign=',o,'linear=',true);
 

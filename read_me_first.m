@@ -60,6 +60,9 @@ read_linear_model;
 % edit read_nonlin_model.m;
 read_nonlin_model;
 
+%% Check that linear and nonlinear models are the same
+check_loglin;
+
 %% Get Information About Model Object
 %
 % Use the function `get` (and a few others) to access various pieces of

@@ -15,14 +15,18 @@ irisrequired 20151016
 %#ok<*NOPTS>
 %#ok<*NASGU>
 
+%% Load Solved Model Object and Historical Database
+%
+% Load the solved model object built `read_linear_model`. You must run
+% `read_linear_model` at least once before running this m-file.
+
+load read_linear_model.mat;
+
 %% Read Model File and Assign Parameters to Model Object
 %
 % The easiest way to assign or change parameters is simply by using the
 % dot-reference, i.e. the name of the model object dot the name of the
 % parameter <?dotRef?>.
-
-o = struct; o.kimball = true; o.bgg = true; o.nant = 0;
-m = model('frbny.model','assign=',o,'linear=',true);
 
 m.alp = 0.16; %?dotRef?
 m.del = 0.03;
@@ -39,7 +43,7 @@ m.std_rm_sh = 0.3;
 % <?assignOpt?>, by using the option `assign=`.
 
 P = struct();
-P.kimball = true; P.bgg = true; P.nant = 0; % required control parameters
+P.kimball = true; P.bgg = true; P.nant = 6; % required control parameters
 P.alp = 0.16; %?paramDbase?
 P.del = 0.03;
 P.gam_ = 0.4;

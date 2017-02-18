@@ -19,7 +19,7 @@ irisrequired 20151016
 % database created in `read_data`. Run `estimate_params` and
 % `filter_hist_data` at least once before running this m-file.
 
-load estimate_params.mat mest;
+load estimate_params_old.mat mest;
 load read_data.mat d startHist endHist;
 
 %% Estimate VAR and BVAR
@@ -120,9 +120,10 @@ Nv = Nv(inx);
 [Cm,Rm] = acf(mest,'order=',1,'select=',ylist);
 
 figure();
-for i = 1 : length(ylist)
-    for j = i : length(ylist)
-        subplot(12,12,(i-1)*12+j);
+n = length(ylist);
+for i = 1 : n
+    for j = i : n
+        subplot(n,n,(i-1)*n+j);
         helper_plot_acf(CNv(i,j,1,:),Cv(i,j,1),Cm(i,j,1)); %?helper_plot_acf?
         title(sprintf('%s x %s',ylist{i},ylist{j}),'Interpreter','none');
     end
@@ -149,9 +150,9 @@ maxabs(Cv1+Cv2+Cv3 - Cv)
 [Cm1,Rm1] = acf(mest,'filter=','per <= 40 & per > 4','select=',ylist);
 
 figure();
-for i = 1 : length(ylist)
-    for j = i : length(ylist)
-        subplot(12,12,(i-1)*12+j);
+for i = 1 : n
+    for j = i : n
+        subplot(n,n,(i-1)*n+j);
         helper_plot_acf(CNv1(i,j,1,:),Cv(i,j,1),Cm1(i,j,1));
         title(sprintf('%s x %s',ylist{i},ylist{j}));
     end
@@ -179,11 +180,11 @@ freq = 0 : 0.05 : pi;
 [Pm,Sm] = xsf(mest,freq,'select=',ylist);
 
 figure();
-
-for i = 1 : length(ylist)
-    subplot(3,4,i);
+k = floor(sqrt(9/16*n));
+for i = 1 : n
+    subplot(k,ceil(n/k),i);
     helper_plot_xsf(freq,Sv(i,i,:),Sm(i,i,:)); %?helper_plot_xsf?
-    title(sprintf('Spect density %s',ylist{i}));
+    title(sprintf('Spect density %s',ylist{i}),'Interpreter','none');
 end
 
 grfun.bottomlegend('VAR: Point Estimate','Model: Asymptotic');

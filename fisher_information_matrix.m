@@ -23,7 +23,7 @@ irisrequired 20151016
 % Load the solved model object built in `read_linear_model`. Run `read_linear_model` at
 % least once before running this m-file.
 
-load read_linear_model m;
+load read_linear_model.mat;
 
 %% Calculate Fisher Information Matrix
 %
@@ -51,8 +51,7 @@ rng(0);
 
 % List of parameters for which for which the Fisher matrix will be
 % evaluated.
-load P
-plist = fieldnames(P);
+plist = fieldnames(priors(get(m,'parameters'),o));
 
 % Set to a larger number in practice.
 nsim = 100;

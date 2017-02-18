@@ -82,7 +82,7 @@
 '\sigma_{gdpdef}' std_gdpdef_sh = 0.1575 % ?_gdpdef: Standard deviation of the gdpdef shock.
 '\sigma_{pce}' std_pce_sh = 0.0999 % ?_corepce: Standard deviation of the pce shock.
 % Standard deviations of the anticipated policy shocks
-!for$[1:12]$!do
+!for$[1:nant]$!do
     '\sigma_{ant?}' std_rm_sh? = 0.2 % ?_r_m?: Standard deviation of the ?-period-ahead anticipated policy shock.
 !end
 % Dynamic links to parameters and steady-state values (needed for estimation since priors are set on _ variables)
@@ -276,7 +276,7 @@ zstar,betbar
 'GDP Deflator measur.shock' gdpdef_sh
 'Core PCE measur.shock' pce_sh
 % innovation for new anticipated shocks, calculated in period T only
-!for$[1:12]$!do,rm_sh?!end
+!for$[1:nant]$!do,rm_sh?!end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Equilibrium conditions %%%%%%%%%%%%%%%%%%%%%%%%
 !transition_equations
@@ -482,7 +482,7 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
     !end
     'Evolution of Net Worth !! nevol'
     !if linear
-        n = zeta_nRk*(Rktil_s-pi_s) - zeta_nR*(R_s{-1}-pi_s+b{-1})  % BUG in MDN: shock not normalized
+        n = zeta_nRk*(Rktil_s-pi_s) - zeta_nR*(R_s{-1}-pi_s+b{-1})
              + zeta_nqk*(qk_s{-1}+kbar_s{-1}) + zeta_nn*n{-1}
              + gammstar*vstar/nstar*(gamm-z) - zeta_nmue*mue{-1} - zeta_nsigw*sigw{-1}; % 7.51
 %         betbar*vkstar*(v+z) = (nkstar-1)*(R_s{-1}-pi_s+b{-1})+nkstar*n{-1}+(sprd*(1-muestar*Gstar)-1)*(qk_s{-1}+kbar_s{-1}+Rktil_s-pi_s)+Rktil_s-pi_s-sprd*muestar*Gstar*(mue{-1}+zeta_Gw*omegabar+zeta_Gsigw*sigw{-1}); % 7.44
@@ -495,7 +495,7 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
     !if linear
         sigw = rho_sigw*sigw{-1} + sigw_sh/zeta_spsigw;
     !else
-        log(sigw/$sigw) = rho_sigw*log(sigw{-1}/$sigw) + sigw_sh/zeta_spsigw !! sigw = fzero(@(sigma) zeta_spb-zeta_sp(sigma,Fom,sprd,1),0.5,optimset('Display','off'));
+        log(sigw/$sigw) = rho_sigw*log(sigw{-1}/$sigw) + sigw_sh/zeta_spsigw !! sigw = solve_sigw(zeta_spb,Fom,sprd);
     !end
     'mue shock !! eq_mue'
     !if linear

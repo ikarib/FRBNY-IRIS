@@ -66,30 +66,30 @@ E.rho_tfp = {P.rho_tfp, 1E-5, .999, logdist.beta(.5,.2)};
 E.rho_gdpdef = {P.rho_gdpdef, 1E-5, .999, logdist.beta(.5,.2)};
 E.rho_pce = {P.rho_pce, 1E-5, .999, logdist.beta(.5,.2)};
 % Priors on exogenous processes - standard deviation
-E.std_g_sh = {P.std_g_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_b_sh = {P.std_b_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_mu_sh = {P.std_mu_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_z_sh = {P.std_z_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_laf_sh = {P.std_laf_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_law_sh = {P.std_law_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_rm_sh = {P.std_rm_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
+E.std_g_sh = {P.std_g_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_b_sh = {P.std_b_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_mu_sh = {P.std_mu_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_z_sh = {P.std_z_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_laf_sh = {P.std_laf_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_law_sh = {P.std_law_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_rm_sh = {P.std_rm_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
 
 if o.bgg
-    E.std_sigw_sh = {P.std_sigw_sh, 1E-5, Inf, logdist.scaleinvchisq(.05,4)};
-%     E.std_mue_sh = {P.std_mue_sh, 1E-5, Inf, logdist.scaleinvchisq(.05,4)};
-%     E.std_gamm_sh = {P.std_gamm_sh, 1E-5, Inf, logdist.scaleinvchisq(.01,4)};
+    E.std_sigw_sh = {P.std_sigw_sh, 1E-5, Inf, logdist.invgamma(NaN,NaN,2,.005)};
+%     E.std_mue_sh = {P.std_mue_sh, 1E-5, Inf, logdist.invgamma(NaN,NaN,2,.005)};
+%     E.std_gamm_sh = {P.std_gamm_sh, 1E-5, Inf, logdist.invgamma(NaN,NaN,2,.0002)};
 end
 
-E.std_pist_sh = {P.std_pist_sh, 1E-8, Inf, logdist.scaleinvchisq(.03,6)};
-E.std_lr_sh = {P.std_lr_sh, 1E-8, Inf, logdist.scaleinvchisq(.75,2)};
-E.std_zp_sh = {P.std_zp_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_tfp_sh = {P.std_tfp_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_gdpdef_sh = {P.std_gdpdef_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
-E.std_pce_sh = {P.std_pce_sh, 1E-8, Inf, logdist.scaleinvchisq(.1,2)};
+E.std_pist_sh = {P.std_pist_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,3,.0027)};
+E.std_lr_sh = {P.std_lr_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.5625)};
+E.std_zp_sh = {P.std_zp_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_tfp_sh = {P.std_tfp_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_gdpdef_sh = {P.std_gdpdef_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
+E.std_pce_sh = {P.std_pce_sh, 1E-8, Inf, logdist.invgamma(NaN,NaN,1,.01)};
 
 % Priors on standard deviations of the anticipated policy shocks
-for v = sprintfc('std_rm_sh%d',1:12)
-    E.(v{1}) = {P.(v{1}), 1E-5, Inf, logdist.scaleinvchisq(.2,4)};
+for v = sprintfc('std_rm_sh%d',1:o.nant)
+    E.(v{1}) = {P.(v{1}), 1E-5, Inf, logdist.invgamma(NaN,NaN,2,.08)};
 end
 
 E.eta_gz = {P.eta_gz, 1E-5, .999, logdist.beta(.5,.2)};

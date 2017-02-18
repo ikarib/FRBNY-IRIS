@@ -25,14 +25,9 @@ if license('test','datafeed_toolbox')
     fprintf('Connecting to the Haver Analytics database at the path %s ...\n',hpath);
     try
         c=haver([hpath 'USECON.dat']);
-        v={'GDP','C','F','JGDP','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'};
+        v={'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'};
         d=fetch(c,v);
         i=info(c,v);
-        close(c)
-        c=haver([hpath 'USNA.dat']);
-        v={'JCXFE'};
-        d=[d fetch(c,v)];
-        i=[i info(c,v)];
         close(c)
         c=haver([hpath 'DAILY.dat']);
         v={'FFED','FYCCZA','FTPZAC'};
@@ -247,7 +242,7 @@ ftitle('U.S. Data for FRBNY Tutorial');
 %% Loads in expected FFR derived from OIS quotes
 % ois = history(blp,strcat({'USSOC','USSOF','USSOI','USSO1','USSO1C','USSO1F','USSO1I','USSO2'},' Curncy'),'PX_LAST','12/31/2008',today,'quaterly');
 ois = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
-d = [d dbfun(@(x) x/4,ois)];
+d = dbmerge(d,dbfun(@(x) x/4,ois));
 % ois = dbload('ois_161205.csv','freq=',4,'dateFormat=','DD/MM/YYYY');
 % v = fieldnames(ois);
 % for i=1:numel(v)

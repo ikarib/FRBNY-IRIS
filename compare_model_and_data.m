@@ -19,7 +19,7 @@ irisrequired 20151016
 % database created in `read_data`. Run `estimate_params` and
 % `filter_hist_data` at least once before running this m-file.
 
-load estimate_params_old.mat mest;
+load estimate_params.mat mest;
 load read_data.mat d startHist endHist;
 
 %% Estimate VAR and BVAR

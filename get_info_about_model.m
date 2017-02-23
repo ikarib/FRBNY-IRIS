@@ -48,19 +48,19 @@ get(m,'xDescript')'
 %% Equations and Equation Labels
 
 disp('Transition equations')
-get(m,'xEqtns')'
+get(m,'xEqtns')
 
 disp('Measurement equations')
-get(m,'yEqtn')'
+get(m,'yEqtn')
 
 disp('Transition equation labels')
-get(m,'xLabels')'
+get(m,'xLabels')
 
 disp('Equation with whose label is Production function');
 findeqtn(m,'Aggregate Production Function')
 
 disp('Equations whose labels start with P');
-findeqtn(m,'-rexp','P.*')'
+findeqtn(m,rexp('^P.*'))
 
 %% Comments and User Data
 %

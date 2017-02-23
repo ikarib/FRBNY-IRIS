@@ -211,7 +211,6 @@ dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',fal
 
 %% Load dataset from CSV file
 %
-fprintf('Loading data from data_150102.csv ...\n');
 d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 % d = dbload('debug/data_151127.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 
@@ -237,23 +236,55 @@ dbplot(d&h&f,Inf, ...
     }, ...
     'tight=',true);
 
-ftitle('U.S. Data for FRBNY Tutorial');
+ftitle('U.S. Data for FRBNY Model');
 
-%% Loads in expected FFR derived from OIS quotes
-% ois = history(blp,strcat({'USSOC','USSOF','USSOI','USSO1','USSO1C','USSO1F','USSO1I','USSO2'},' Curncy'),'PX_LAST','12/31/2008',today,'quaterly');
-ois = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
-d = dbmerge(d,dbfun(@(x) x/4,ois));
-% ois = dbload('ois_161205.csv','freq=',4,'dateFormat=','DD/MM/YYYY');
-% v = fieldnames(ois);
-% for i=1:numel(v)
-%     d.(['obs_ois' num2str(i)]) = ois.(v{i})/4;
-% end
-% clear ois v i
+%% Derive expected FFR from OIS quotes
+
+% Tullett Prebon series start at 2014Q3
+v={'M111F3M','M111F6M','M111F9M','M111FWM','M111FFM','M111FGM','M111FOM','M111FBM','M111FEH','M111FIH','M111FRH','M111F3Y','M111F9S'};
+H = haverdata('INTDAILY',v);
+H = dbfun(@(x) convert(x,4,'method=','last'),H);
+ois = struct;
+ois.obs_ois1 = convert(H.(v{1}),4,'method=','last');
+for t=2:numel(v)
+    ois.(sprintf('obs_ois%d',t)) = convert(H.(v{t})*t-H.(v{t-1})*(t-1),4,'method=','last');
+end
+ois = dbfun(@(x) x/4,ois);
+
+% Reuters series start at 2003Q3, but Haver is missing 15-month, 18-month and 21-month OIS rates
+H = haverdata('INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2'});
+H = dbfun(@(x) convert(x,4,'method=','last'),H);
+R.obs_ois1 = convert(H.T111W3M,4,'method=','last');
+R.obs_ois2 = convert(H.T111W6M,4,'method=','last')*2-R.obs_ois1;
+R.obs_ois3 = convert(H.T111W9M,4,'method=','last')*3-R.obs_ois1-R.obs_ois2;
+R.obs_ois4 = convert(H.T111W1,4,'method=','last')*4-R.obs_ois1-R.obs_ois2-R.obs_ois3;
+R.obs_ois8 = (convert(H.T111W2,4,'method=','last')*8-R.obs_ois1-R.obs_ois2-R.obs_ois3-R.obs_ois4)/4;
+R = dbfun(@(x) x/4,R);
+
+% Bloomberg OIS rates
+[ois_data,dates] = xlsread('OIS_Bloomberg.xlsx','A4:I70');
+dates = str2dat(dates,'dateFormat=','DD/MM/YYYY','freq=',4)';
+ois_ = struct;
+ois_.obs_ois1 = tseries(dates,ois_data(:,1));
+for t=2:8
+    ois_.(sprintf('obs_ois%d',t)) = tseries(dates,ois_data(:,t)*t-ois_data(:,t-1)*(t-1));
+end
+ois_ = dbfun(@(x) x/4,ois_);
+% ois_ = dbclip(ois_,qq(2008,4):endHist);
+clear ois_data dates
+
+% original CSV file
+ois__ = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+ois__ = dbfun(@(x) x/4,ois__);
+
+dbplot(ois&ois_&ois__)
 
 %% Save Data for Future Use
 %
 % Save the final database and the dates in a mat-file (binary file) for
 % future use.
+
+d = dbmerge(d,ois__);
 
 save read_data.mat d startHist endHist;
 

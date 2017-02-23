@@ -144,15 +144,15 @@ sstate_database = get(m,'sstate')
 % Change the levels of `y` and `c` using the
 % model-dot-name notation.
 
-m.y_s = 2;
-m.c_s = 1;
+m.y = 2;
+m.c = 1;
 
 % ...
 %
 % Change the steady states for `y` and `c` using the function `assign` with
 % name-pair values.
 
-m = assign(m,'y_s',2,'c_s',1);
+m = assign(m,'y',2,'c',1);
 
 % ...
 %
@@ -160,8 +160,8 @@ m = assign(m,'y_s',2,'c_s',1);
 % passing the database in `assign`.
 
 P = struct();
-P.y_s = 2;
-P.c_s = 1;
+P.y = 2;
+P.c = 1;
 m = assign(m,P);
 
 % ...

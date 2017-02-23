@@ -194,7 +194,7 @@ zstar,betbar
         !end
     !end
 !transition_variables
-!for _s,_f !do
+!for '',_f !do
     'Output !! y?' y?
     'Consumption !! c?' c?
     'Investment !! i?' i?
@@ -275,12 +275,13 @@ zstar,betbar
 'Fernald TFP measur.shock' tfp_sh
 'GDP Deflator measur.shock' gdpdef_sh
 'Core PCE measur.shock' pce_sh
-% innovation for new anticipated shocks, calculated in period T only
-!for$[1:nant]$!do,rm_sh?!end
+!for$[1:nant]$!do
+    'Anticipated monetary policy shock, ?q' rm_sh?
+!end
 
 %%%%%%%%%%%%%%%%%%%%%%%% Equilibrium conditions %%%%%%%%%%%%%%%%%%%%%%%%
 !transition_equations
-!for _s,_f !do
+!for '',_f !do
     'Consumption Euler Equation !! euler?'
     !if linear
         xi? = R?-pi?{1}+b+xi?{1}-sigmac*z{1}; % 8.89
@@ -377,48 +378,48 @@ zstar,betbar
 % Sticky prices and wages
 'Phillips Curve !! phlps'
 !if linear
-    pi_s = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*mc_s
-     + iota_p*pi_s{-1} + betbar*pi_s{1} )/(1+iota_p*betbar) + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*laf; % 8.103
+    pi = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*mc
+     + iota_p*pi{-1} + betbar*pi{1} )/(1+iota_p*betbar) + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*laf; % 8.103
 !else
     !if kimball
         % Kimball aggregator for prices (linearized)
-        log(pi_s/$pi_s) = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*log(mc_s/$mc_s)
-         + iota_p*log(pi_s{-1}/$pi_s) + betbar*log(pi_s{1}/$pi_s) )/(1+iota_p*betbar)
-         + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*log(laf/$laf) !! mc_s=1/Bigphi; % 8.103,,8.42
+        log(pi/$pi) = ( ((1-zeta_p*betbar)*(1-zeta_p))/zeta_p/((Bigphi-1)*epsp+1)*log(mc/$mc)
+         + iota_p*log(pi{-1}/$pi) + betbar*log(pi{1}/$pi) )/(1+iota_p*betbar)
+         + (1-zeta_p*betbar)*(1/zeta_p-1)/(1+iota_p*betbar)/(1+(Bigphi-1)*epsp)*(1-1/Bigphi)*log(laf/$laf) !! mc=1/Bigphi; % 8.103,,8.42
     !else
         % Dixit-Stiglitz CES aggregator for prices
         1 = (1-zeta_p)*(p2/p1)^(1/$laf)+zeta_p/chi_p^(1/$laf) !! p1=p2; % 8.43,8.44
-        p1 = xi_s*y_s*mc_s*(1+1/laf)+zeta_p*bet*exp((1-sigmac)*z{1})*p1{1}/chi_p{1}^(1+1/$laf) !! mc_s=1/Bigphi; % 8.41,8.42
-        p2 = xi_s*y_s/laf+zeta_p*bet*exp((1-sigmac)*z{1})*p2{1}/chi_p{1}^(1/$laf) !! p2=xi_s*y_s/laf/(1-zeta_p*betbar);
-        chi_p = (pi_s{-1}/$pi_s)^iota_p*$pi_s/pi_s !! chi_p = 1;
+        p1 = xi*y*mc*(1+1/laf)+zeta_p*bet*exp((1-sigmac)*z{1})*p1{1}/chi_p{1}^(1+1/$laf) !! mc=1/Bigphi; % 8.41,8.42
+        p2 = xi*y/laf+zeta_p*bet*exp((1-sigmac)*z{1})*p2{1}/chi_p{1}^(1/$laf) !! p2=xi*y/laf/(1-zeta_p*betbar);
+        chi_p = (pi{-1}/$pi)^iota_p*$pi/pi !! chi_p = 1;
     !end
 !end
 'Evolution of Wages !! wage'
 !if linear
-    w_s = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-muw_s
-%      - (1+iota_w*betbar)*pi_s + (w_s{-1}+iota_w*pi_s{-1}-z)  % BUG in MDN
-     - (1+iota_w*betbar)*(pi_s+z) + (w_s{-1}+iota_w*(pi_s{-1}+z{-1}))
-     + betbar*(w_s{1}+z{1}+pi_s{1}) )/(1+betbar) + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*law; % 8.106
+    w = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-muw
+%      - (1+iota_w*betbar)*pi + (w{-1}+iota_w*pi{-1}-z)  % BUG in MDN
+     - (1+iota_w*betbar)*(pi+z) + (w{-1}+iota_w*(pi{-1}+z{-1}))
+     + betbar*(w{1}+z{1}+pi{1}) )/(1+betbar) + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*law; % 8.106
 !else
     !if kimball
         % Kimball aggregator for wages (linearized)
-        log(w_s/$w_s) = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-log(muw_s/$muw_s)
-         - (1+iota_w*betbar)*(log(pi_s/$pi_s)+z-$z) + (log(w_s{-1}/$w_s)+iota_w*(log(pi_s{-1}/$pi_s)+z{-1}-$z))
-         + betbar*(log(w_s{1}/$w_s)+z{1}-$z+log(pi_s{1}/$pi_s)) )/(1+betbar)
-         + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*log(law/$law) !! muw_s=muwstar; % 8.106,8.66
+        log(w/$w) = ( (1-zeta_w*betbar)*(1-zeta_w)/zeta_w/((muwstar-1)*epsw+1)*-log(muw/$muw)
+         - (1+iota_w*betbar)*(log(pi/$pi)+z-$z) + (log(w{-1}/$w)+iota_w*(log(pi{-1}/$pi)+z{-1}-$z))
+         + betbar*(log(w{1}/$w)+z{1}-$z+log(pi{1}/$pi)) )/(1+betbar)
+         + (1-zeta_w*betbar)*(1/zeta_w-1)/(1+betbar)/(1+(muwstar-1)*epsw)*(1-1/muwstar)*log(law/$law) !! muw=muwstar; % 8.106,8.66
     !else
         % Dixit-Stiglitz CES aggregator for wages
-        1 = (1-zeta_w)*(w_s*w2/w1)^(1/$law)+zeta_w*(w_s/w_s{-1}/chi_w)^(1/$law) !! w1=w2*w_s; % 8.65,8.67
-        w1 = xi_s*L_s*w_s^(2+1/$law)/muw_s*(1+1/law)+zeta_w*bet*exp((1-sigmac)*z{1})*w1{1}/chi_w{1}^(1+1/$law) !! muw_s=muwstar; % 8.64,8.66
-        w2 = xi_s*L_s*w_s^(1+1/$law)/law+zeta_w*bet*exp((1-sigmac)*z{1})*w2{1}/chi_w{1}^(1/$law) !! w2=xi_s*L_s*w_s^(1+1/law)/law/(1-zeta_w*betbar);
-        chi_w = (pi_s{-1}/$pi_s*exp(z{-1}-$z))^iota_w*$pi_s/pi_s*exp($z-z) !! chi_w = 1;
+        1 = (1-zeta_w)*(w*w2/w1)^(1/$law)+zeta_w*(w/w{-1}/chi_w)^(1/$law) !! w1=w2*w; % 8.65,8.67
+        w1 = xi*L*w^(2+1/$law)/muw*(1+1/law)+zeta_w*bet*exp((1-sigmac)*z{1})*w1{1}/chi_w{1}^(1+1/$law) !! muw=muwstar; % 8.64,8.66
+        w2 = xi*L*w^(1+1/$law)/law+zeta_w*bet*exp((1-sigmac)*z{1})*w2{1}/chi_w{1}^(1/$law) !! w2=xi*L*w^(1+1/law)/law/(1-zeta_w*betbar);
+        chi_w = (pi{-1}/$pi*exp(z{-1}-$z))^iota_w*$pi/pi*exp($z-z) !! chi_w = 1;
     !end
 !end
 'Monetary Policy Rule !! mp'
 !if linear
-    R_s = rho*R_s{-1} + (1-rho)*(psi1*(pi_s-pist)+psi2*(y_s-y_f)) + psi3*diff(y_s-y_f) + rm; % 8.103
+    R = rho*R{-1} + (1-rho)*(psi1*(pi-pist)+psi2*(y-y_f)) + psi3*diff(y-y_f) + rm; % 8.103
 !else
-    R_s/$R_s = (R_s{-1}/$R_s)^rho * ( (pi_s/$pi_s/exp(pist))^psi1 * (y_s/y_f)^psi2 )^(1-rho) * (y_s/y_s{-1}*y_f{-1}/y_f)^psi3 * exp(rm) !! pi_s = pistar; % 8.22
+    R/$R = (R{-1}/$R)^rho * ( (pi/$pi/exp(pist))^psi1 * (y/y_f)^psi2 )^(1-rho) * (y/y{-1}*y_f{-1}/y_f)^psi3 * exp(rm) !! pi = pistar; % 8.22
 !end
 %% Exogenous Processes
 'Neutral Technology !! eq_z'
@@ -460,21 +461,21 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
 !if ~bgg
     % assume no financial frictions
     !if linear
-        spread_s = 0;
+        spread = 0;
     !else
-        spread_s = sprd;
+        spread = sprd;
     !end
 !else
     !if linear
-        spread_s = zeta_spb*(qk_s+kbar_s-n) + zeta_spsigw*sigw + zeta_spmue*mue; % 7.50
+        spread = zeta_spb*(qk+kbar-n) + zeta_spsigw*sigw + zeta_spmue*mue; % 7.50
     !else
-        mue = (1-1/spread_s)/(dG{1}/dGamma{1}*(1-Gamma{1})+G{1}); % 7.9,7.33
+        mue = (1-1/spread)/(dG{1}/dGamma{1}*(1-Gamma{1})+G{1}); % 7.9,7.33
     !end
     'Zero-profit condition !! zp'
     !if linear
-%         0=Rktil_s-R_s{-1}-b{-1}+zeta_zw*omegabar+zeta_zsigw*sigw{-1}+zeta_zmue*mue{-1}+(n{-1}-qk_s{-1}-kbar_s{-1})/Rhostar; % 7.40
+%         0=Rktil-R{-1}-b{-1}+zeta_zw*omegabar+zeta_zsigw*sigw{-1}+zeta_zmue*mue{-1}+(n{-1}-qk{-1}-kbar{-1})/Rhostar; % 7.40
     !else
-        (Gamma-mue{-1}*G)*Rktil_s/R_s{-1}/exp(b{-1}) = 1-n{-1}/qk_s{-1}/kbar_s{-1} !! n = (1-sprd*(Gamma-mue*G))*kbar_s; % 7.18,7.24
+        (Gamma-mue{-1}*G)*Rktil/R{-1}/exp(b{-1}) = 1-n{-1}/qk{-1}/kbar{-1} !! n = (1-sprd*(Gamma-mue*G))*kbar; % 7.18,7.24
         Gamma = omegabar*dGamma+G;
         dGamma = 1-normcdf(log(omegabar)/sigw{-1}+sigw{-1}/2) !! dGamma = 1-Fom;
         G = normcdf(log(omegabar)/sigw{-1}-sigw{-1}/2);
@@ -482,14 +483,14 @@ pist = rho_pist*pist{-1} + pist_sh !! pist = 0; % AEJ(18)
     !end
     'Evolution of Net Worth !! nevol'
     !if linear
-        n = zeta_nRk*(Rktil_s-pi_s) - zeta_nR*(R_s{-1}-pi_s+b{-1})
-             + zeta_nqk*(qk_s{-1}+kbar_s{-1}) + zeta_nn*n{-1}
+        n = zeta_nRk*(Rktil-pi) - zeta_nR*(R{-1}-pi+b{-1})
+             + zeta_nqk*(qk{-1}+kbar{-1}) + zeta_nn*n{-1}
              + gammstar*vstar/nstar*(gamm-z) - zeta_nmue*mue{-1} - zeta_nsigw*sigw{-1}; % 7.51
-%         betbar*vkstar*(v+z) = (nkstar-1)*(R_s{-1}-pi_s+b{-1})+nkstar*n{-1}+(sprd*(1-muestar*Gstar)-1)*(qk_s{-1}+kbar_s{-1}+Rktil_s-pi_s)+Rktil_s-pi_s-sprd*muestar*Gstar*(mue{-1}+zeta_Gw*omegabar+zeta_Gsigw*sigw{-1}); % 7.44
+%         betbar*vkstar*(v+z) = (nkstar-1)*(R{-1}-pi+b{-1})+nkstar*n{-1}+(sprd*(1-muestar*Gstar)-1)*(qk{-1}+kbar{-1}+Rktil-pi)+Rktil-pi-sprd*muestar*Gstar*(mue{-1}+zeta_Gw*omegabar+zeta_Gsigw*sigw{-1}); % 7.44
 %         n = gammstar*vstar/nstar*(gamm+v);
     !else
-        v*exp(z) = ((1-mue{-1}*G)*Rktil_s/pi_s-(1-n{-1}/qk_s{-1}/kbar_s{-1})*R_s{-1}/pi_s*exp(b{-1}))*qk_s{-1}*kbar_s{-1} !! v = sprd/betbar*kbar_s*(1-Gamma); % 7.19,7.24,7.25
-        n-gamm*v = $n-$gamm*$v !! spread_s = sprd;
+        v*exp(z) = ((1-mue{-1}*G)*Rktil/pi-(1-n{-1}/qk{-1}/kbar{-1})*R{-1}/pi*exp(b{-1}))*qk{-1}*kbar{-1} !! v = sprd/betbar*kbar*(1-Gamma); % 7.19,7.24,7.25
+        n-gamm*v = $n-$gamm*$v !! spread = sprd;
     !end
     'sigw shock !! eq_sigw'
     !if linear
@@ -523,10 +524,10 @@ lr = rho_lr*lr{-1} + lr_sh !! lr = 0;
 tfp = rho_tfp*tfp{-1} + tfp_sh !! tfp = 0;
 gdpdef = rho_gdpdef*gdpdef{-1} + gdpdef_sh !! gdpdef = 0;
 pce = rho_pce*pce{-1} + pce_sh !! pce = 0;
-E_pi = movavg(pi_s{1},40) !! E_pi = pi_s;
-E_R = movavg(R_s{1},40) !! E_R = R_s;
+E_pi = movavg(pi{1},40) !! E_pi = pi;
+E_R = movavg(R{1},40) !! E_R = R;
 !for$[1:nant]$!do
-    E_R? = R_s{?} !! E_R? = R_s;
+    E_R? = R{?} !! E_R? = R;
 !end
 %% Declare Measurement Variables (aka Observables)
 !measurement_variables
@@ -543,89 +544,89 @@ E_R = movavg(R_s{1},40) !! E_R = R_s;
 '10-year Interest Rate' obs_longrate
 'Total Factor Productivity' obs_tfp
 !for$[1:nant]$!do
-    'OIS expectations of ?-period-ahead interest rates at a quarterly rate' obs_ois?
+    '?-quarter Interest Rate Expectations' obs_ois?
 !end
 !measurement_equations
 'Output Growth (Bureau of Economic Analysis) - Quarterly!'
 !if linear
-    obs_gdp = diff(y_s) + z + 100*(exp(zstar)-1);
+    obs_gdp = diff(y) + z + 100*(exp(zstar)-1);
 !else
-    obs_gdp = difflog(y_s) + z - $z + 100*(exp($z)-1);
+    obs_gdp = difflog(y) + z - $z + 100*(exp($z)-1);
 !end
 'Hours Worked (Bureau of Labor Statistics)'
 !if linear
-    obs_hours = L_s + Lmean;
+    obs_hours = L + Lmean;
 !else
-    obs_hours = log(L_s/$L_s) + Lmean;
+    obs_hours = log(L/$L) + Lmean;
 !end
 'Labor Share/Real Wage Growth (Bureau of Labor Statistics)'
 !if linear
-    obs_wages = diff(w_s) + z + 100*(exp(zstar)-1);
+    obs_wages = diff(w) + z + 100*(exp(zstar)-1);
 !else
-    obs_wages = difflog(w_s) + z - $z + 100*(exp($z)-1);
+    obs_wages = difflog(w) + z - $z + 100*(exp($z)-1);
 !end
 'Inflation (GDP Deflator) (Bureau of Economic Analysis)'
 !if linear
-    obs_gdpdeflator = gamm_gdpdef*pi_s + gdpdef + 100*(pistar-1) + del_gdpdef;
+    obs_gdpdeflator = gamm_gdpdef*pi + gdpdef + 100*(pistar-1) + del_gdpdef;
 !else
-    obs_gdpdeflator = gamm_gdpdef*log(pi_s/$pi_s) + gdpdef + 100*($pi_s-1) + del_gdpdef;
+    obs_gdpdeflator = gamm_gdpdef*log(pi/$pi) + gdpdef + 100*($pi-1) + del_gdpdef;
 !end
 'Inflation (Core PCE) (Bureau of Economic Analysis)'
 !if linear
-    obs_corepce = pi_s + pce + 100*(pistar-1);
+    obs_corepce = pi + pce + 100*(pistar-1);
 !else
-    obs_corepce = log(pi_s/$pi_s) + pce + 100*($pi_s-1);
+    obs_corepce = log(pi/$pi) + pce + 100*($pi-1);
 !end
 'Nominal interest rate/Federal Funds Rate (Board of Governors of the Federal Reserve System)'
 !if linear
-    obs_nominalrate = R_s + Rstarn;
+    obs_nominalrate = R + Rstarn;
 !else
-    obs_nominalrate = log(R_s/$R_s) + 100*($R_s-1);
+    obs_nominalrate = log(R/$R) + 100*($R-1);
 !end
 'Consumption Growth (Bureau of Economic Analysis)'
 !if linear
-    obs_consumption = diff(c_s) + z + 100*(exp(zstar)-1);
+    obs_consumption = diff(c) + z + 100*(exp(zstar)-1);
 !else
-    obs_consumption = difflog(c_s) + z - $z + 100*(exp($z)-1);
+    obs_consumption = difflog(c) + z - $z + 100*(exp($z)-1);
 !end
 'Investment Growth (Bureau of Economic Analysis)'
 !if linear
-    obs_investment = diff(i_s) + z + 100*(exp(zstar)-1);
+    obs_investment = diff(i) + z + 100*(exp(zstar)-1);
 !else
-    obs_investment = difflog(i_s) + z - $z + 100*(exp($z)-1);
+    obs_investment = difflog(i) + z - $z + 100*(exp($z)-1);
 !end
 'Spread (Baa) (Board of Governors of the Federal Reserve System)'
 !if linear
-    obs_spread = spread_s + b + 100*log(sprd);
+    obs_spread = spread + b + 100*log(sprd);
 !else
-    obs_spread = log(spread_s/$spread_s) + b + 100*log($spread_s);
+    obs_spread = log(spread/$spread) + b + 100*log($spread);
 !end
 '10-year Inflation Expectations (Federal Reserve Bank of Philadelphia)'
 !if linear
     obs_longinflation = E_pi + 100*(pistar-1);
 !else
-    obs_longinflation = log(E_pi/$pi_s) + 100*($pi_s-1);
+    obs_longinflation = log(E_pi/$pi) + 100*($pi-1);
 !end
 '10-year Interest Rate (Board of Governors of the Federal Reserve System)'
 !if linear
     obs_longrate = E_R + lr + Rstarn;
 !else
-    obs_longrate = log(E_R/$R_s) + lr + 100*($R_s-1);
+    obs_longrate = log(E_R/$R) + lr + 100*($R-1);
 !end
 'Total Factor Productivity (Federal Reserve Bank of San Francisco)'
 !if linear
-    obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*diff(u_s);
+    obs_tfp = (1-alp*modelalp_ind)*z + tfp + alp/(1-alp*(1-modelalp_ind))*diff(u);
 !else
-    obs_tfp = (1-alp*modelalp_ind)*(z-$z) + tfp + alp/(1-alp*(1-modelalp_ind))*difflog(u_s);
+    obs_tfp = (1-alp*modelalp_ind)*(z-$z) + tfp + alp/(1-alp*(1-modelalp_ind))*difflog(u);
 !end
 !for$[1:nant]$!do
     'Expected FFR derived from OIS quotes (BCFF survey)'
     !if linear
         obs_ois? = E_R? + Rstarn;
     !else
-        obs_ois? = log(E_R?/$R_s) + 100*($R_s-1);
+        obs_ois? = log(E_R?/$R) + 100*($R-1);
     !end
 !end
 !reporting_equations
 'Annual inflation !! pi_a'
-pi_a = movsum(pi_s,4);
+pi_a = movsum(pi,4);

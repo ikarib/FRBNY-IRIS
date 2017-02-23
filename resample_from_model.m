@@ -179,8 +179,9 @@ figure
 labels = strrep(get(m,'eList'),'_sh','');
 explode = strcmpi(labels,'g');
 cap=autocaption(m,v,'$descript$');
+nx=floor(sqrt(nv)); ny=ceil(nv/nx);
 for i=1:nv
-    subplot(3,4,i)
+    subplot(nx,ny,i)
     pie(cstd.(v{i}),explode,labels)
     title(cap{i})
 end

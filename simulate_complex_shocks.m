@@ -84,9 +84,9 @@ d = zerodb(m,startDate-3:startDate);
 d.g_sh(startDate) = log(1.1);
 
 p = plan(m,startDate:endDate);
-p = exogenise(p,'R_s',startDate:startDate+nPer-1);
+p = exogenise(p,'R',startDate:startDate+nPer-1);
 p = endogenise(p,'rm_sh',startDate:startDate+nPer-1);
-d.R_s(startDate:startDate+nPer-1) = 0;
+d.R(startDate:startDate+nPer-1) = 0;
 
 s1 = simulate(m,d,startDate:endDate, ... %?immediate?
    'deviation',true);
@@ -110,10 +110,10 @@ grfun.bottomlegend('No delay','Anticipated','Unanticipated');
 % a 1 pct increase in government spending in the first period.
 
 d = zerodb(m,startDate-3:startDate);
-d.c_s(startDate) = 0.01;
+d.c(startDate) = 0.01;
 
 p = plan(m,startDate:endDate);
-p = exogenise(p,'c_s',startDate);
+p = exogenise(p,'c',startDate);
 p = endogenise(p,'g_sh',startDate);
 s = simulate(m,d,startDate:endDate,'deviation=',true,'plan=',p);
 s = dbextend(d,s);

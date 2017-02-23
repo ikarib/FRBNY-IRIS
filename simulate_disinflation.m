@@ -76,7 +76,7 @@ grfun.ftitle('Disinflation');
 % Sacrifice ratio is the cumulative output loss after a 1% PA disinflation.
 % Divide by 4 to get an annualised figure (reported in the literature).
 
-sacRat = -cumsum(100*(s.y_s-1))/4
+sacRat = -cumsum(100*(s.y-1))/4
 
 %% Change Price and Wage Stickiness and Compare to Baseline
 %
@@ -95,7 +95,7 @@ dbplot(s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Disinflation with More Flexible Prices');
 
 disp('Cumulative output gap (sacrifice ratio):');
-sacRat = -cumsum(100*(s.y_s-1))/4;
+sacRat = -cumsum(100*(s.y-1))/4;
 
 figure();
 plot(sacRat);

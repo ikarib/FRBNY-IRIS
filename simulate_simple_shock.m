@@ -94,11 +94,8 @@ d.g_sh(startDate) = log(1.1);
 s = simulate(m,d,1:endDate);
 s = dboverlay(d,s);
 
-dbplot(s1 & s,plotRng,plotList,'tight=',true);
+dbplot(d & s,plotRng,plotList,'tight=',true);
 grfun.ftitle('Responses to Government Spending Shock -- Full Levels');
-
-%% In linear model there should be no difference between s1 and s for variables with zero steady states
-maxabs(s1,s)
 
 %% Help on IRIS Functions Used in This File
 %

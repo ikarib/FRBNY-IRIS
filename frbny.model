@@ -150,7 +150,6 @@ zstar,betbar
             GammamuG := Gammastar-muestar*Gstar;
             GammamuGprime := dGammadomegastar-muestar*dGdomegastar;
             nkstar := 1-sprd*GammamuG;
-            Rhostar := 1/nkstar-1;
 
             % elasticities wrt omegabar
             zeta_bw := muestar*nkstar*(zwstar/sigwstar-dg)/(1/dg-muestar);
@@ -181,6 +180,7 @@ zstar,betbar
 
             % some ratios/elasticities
             Rkstar := sprd*rstar*pistar;
+            Rhostar := 1/nkstar-1;
             zeta_Gw := dGdomegastar/Gstar*omegabarstar;
             zeta_Gsigw := dGdsigmastar/Gstar*sigwstar;
 

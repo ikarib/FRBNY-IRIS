@@ -11,7 +11,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20151016
+irisrequired 20170224
 
 %% Set the start and end dates for the historical series
 startHist = qq(1959,3);
@@ -21,49 +21,19 @@ dat2str([startHist,endHist])
 
 %% Load the raw series from Haver Analaytics
 if license('test','datafeed_toolbox')
-    hpath='\\wahaverdb\DLX\DATA\'; % set your local path here
-    fprintf('Connecting to the Haver Analytics database at the path %s ...\n',hpath);
+    fprintf('Connecting to the Haver Analytics database ...\n',);
     try
-        c=haver([hpath 'USECON.dat']);
-        v={'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'};
-        d=fetch(c,v);
-        i=info(c,v);
-        close(c)
-        c=haver([hpath 'DAILY.dat']);
-        v={'FFED','FYCCZA','FTPZAC'};
-        d=[d fetch(c,v)];
-        i=[i info(c,v)];
-        close(c)
-        c=haver([hpath 'SURVEYS.dat']);
-        v={'ASACX10'};
-        d=[d fetch(c,v)];
-        i=[i info(c,v)];
-        close(c)
-        H=struct;
-        for j=1:size(d,2)
-            % create dates
-            switch i(j).Frequency
-                case 'D'
-                    dates=d{j}(:,1);
-                case 'M'
-                    dates=mm(year(d{j}(1)),month(d{j}(1)));
-                case 'Q'
-                    dates=qq(year(d{j}(1)),month(d{j}(1))/3);
-                case 'Y'
-                    dates=yy(year(d{j}(1)));
-                otherwise
-                    error('unknown freq: %s',i(j).Frequency)
-            end
-            c=evalc('disp(i(j))'); % comment
-            H.(i(j).VarName)=tseries(dates,d{j}(:,2),c);
-        end
-        clear hpath c v d i j dates
+        H = import_haver('\\wahaverdb\DLX\DATA\', ...
+            'USECON',{'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'},...
+            'DAILY',{'FFED','FYCCZA','FTPZAC'},...
+            'SURVEYS','ASACX10');
         disp('Haver Database');
-        H %#ok<NOPTS>
+        dbprintuserdata(H,'Descriptor')
     catch E
 		warning(E.message)
-        for v={'GDP','C','F','JGDP','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE','JCXFE','FFED','FYCCZA','FTPZAC','ASACX10'}; H.(v{1})=tseries; end
-		fprintf('Will try FRED next.\n');
+        for v={'GDP','C','F','JGDP','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE','JCXFE','FFED','FYCCZA','FTPZAC','ASACX10'}
+            H.(v{1})=tseries;
+        end
     end
 end
 

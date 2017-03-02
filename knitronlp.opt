@@ -1,0 +1,55 @@
+
+# Artelys Knitro 10.1.0 Options file
+# http://www.artelys.com/tools/knitro_doc/
+
+# Which algorithm to use.
+#   auto   = 0 = let Knitro choose the algorithm
+#   direct = 1 = use Interior (barrier) Direct algorithm
+#   cg     = 2 = use Interior (barrier) CG algorithm
+#   active = 3 = use Active Set SLQP algorithm
+#   sqp    = 4 = use Active Set SQP algorithm
+#   multi  = 5 = run multiple algorithms (perhaps in parallel)
+algorithm multi
+
+# Specifies the verbosity of output.
+#   none         = 0 = nothing
+#   summary      = 1 = only final summary information
+#   iter_10      = 2 = information every 10 iterations is printed
+#   iter         = 3 = information at each iteration is printed
+#   iter_verbose = 4 = more verbose information at each iteration is printed
+#   iter_x       = 5 = in addition, values of solution vector (x) are printed
+#   all          = 6 = in addition, constraints (c) and multipliers (lambda)
+outlev iter_verbose  # Equivalent to setting 'Display' to 'iter'
+
+# Specifies the final relative stopping tolerance for the KKT (optimality)
+# error. Smaller values of opttol result in a higher degree of accuracy in
+# the solution with respect to optimality.
+opttol 1e-16         # Equivalent to setting 'TolFun' to 1e-16
+
+# Maximum number of function evaluations to allow
+# (a negative number implies no limit is imposed).
+maxfevals    -1
+
+# Specifies multi algorithm subproblem solve output control.
+#   0 = no output from subproblem solves
+#   1 = Subproblem output enabled, controlled by option 'outlev'.
+#       Output is directed to a file 'knitro_ma_*.log'
+ma_outsub 1
+
+# Specifies conditions for terminating when 'algorithm=multi'.
+#   all       = 0 = terminate after all algorithms complete
+#   optimal   = 1 = terminate at first local optimum
+#   feasible  = 2 = terminate at first feasible solution estimate
+#   any       = 3 = terminate at first completed solve
+ma_terminate all
+
+# Where to direct the output.
+#   screen  = 0 = directed to stdout
+#   file    = 1 = directed to a file called knitro.log
+#   both    = 2 = both stdout and file called knitro.log
+outmode both
+
+# Whether to use the Knitro Tuner.
+#   off    = 0 = Knitro Tuner turned off
+#   on     = 1 = Knitro Tuner enabled
+tuner        off

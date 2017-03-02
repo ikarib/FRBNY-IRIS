@@ -14,9 +14,9 @@ function zeta_spx = zeta_sp(sigma,Fom,sprd,x)
     nk = 1-sprd.*GammamuG;
     
     % elasticities wrt omegabar
-    zetabomega = mu.*nk.*(z./sigma-dg)./(1./dg-mu);
-    zetazomega = omega.*dGdomega.*(1./dg-mu)./GammamuG;
-    zeta_bw_zw = zetabomega./zetazomega;
+    zeta_bw = mu.*nk.*(z./sigma-dg)./(1./dg-mu);
+    zeta_zw = omega.*dGdomega.*(1./dg-mu)./GammamuG;
+    zeta_bw_zw = zeta_bw./zeta_zw;
     
     switch x
         case 1

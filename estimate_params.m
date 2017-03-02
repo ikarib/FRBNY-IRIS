@@ -11,7 +11,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20151016
+irisrequired 20170224
 %#ok<*NOPTS>
 
 %% Load Solved Model Object and Historical Database
@@ -24,7 +24,13 @@ load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-init = get(m,'parameters');
+reoptimize = 0;
+if reoptimize
+    init = get(m,'parameters');
+else
+    load estimate_params.mat est
+    init = est;
+end
 E = priors(init,o);
 disp(E)
 
@@ -56,9 +62,9 @@ for v=sprintfc('std_rm_sh%d',1:o.nant)
     J.(v{1})=tseries(startHist:qq(2008,3),0);
 end
 filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-optimSet = {'MaxFunEvals=',10000,'TolFun=',1e-16};
+optimSet = optimset('Algorithm','interior-point','Display','iter','TolFun',1e-16,'MaxFunEvals',20000,'UseParallel',false);
 tic
-[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty');
+[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty','optimiser=',{@knitronlp,'knitronlp.opt'});
 toc
 
 %% Print Estimation Results
@@ -167,7 +173,7 @@ legend('Prior Density','Posterior Mode','Posterior Density', ...
 
 %% Save Model Object with Estimated Parameters
 
-save estimate_params.mat mest o pos E theta logpost;
+save estimate_params.mat est mest o pos E theta logpost;
 
 %% Help on IRIS Functions Used in This File
 %

@@ -20,58 +20,55 @@ disp('Historical range');
 dat2str([startHist,endHist])
 
 %% Load the raw series from Haver Analaytics
-if license('test','datafeed_toolbox')
-    fprintf('Connecting to the Haver Analytics database ...\n',);
-    try
-        H = import_haver('\\wahaverdb\DLX\DATA\', ...
-            'USECON',{'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'},...
-            'DAILY',{'FFED','FYCCZA','FTPZAC'},...
-            'SURVEYS','ASACX10');
-        disp('Haver Database');
-        dbprintuserdata(H,'Descriptor')
-    catch E
-		warning(E.message)
-        for v={'GDP','C','F','JGDP','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE','JCXFE','FFED','FYCCZA','FTPZAC','ASACX10'}
-            H.(v{1})=tseries;
-        end
+fprintf('Connecting to the Haver Analytics database ...\n');
+try
+    H = import_haver('\\wahaverdb\DLX\DATA\', ...
+        'USECON',{'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'},...
+        'DAILY',{'FFED','FYCCZA','FTPZAC'},...
+        'SURVEYS','ASACX10');
+    disp('Haver Database');
+    dbprintuserdata(H,'Descriptor')
+catch E
+    warning(E.message)
+    for v={'GDP','C','F','JGDP','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE','JCXFE','FFED','FYCCZA','FTPZAC','ASACX10'}
+        H.(v{1})=tseries;
     end
+    warning('Will try FRED next.')
 end
 
 %% Retrieve the raw series from FRED, Federal Reserve Bank of St. Louis
-if license('test','datafeed_toolbox')
-	% Load data from FRED and convert to quarterly periodicity
-	% Note that Dates are start-of-period Dates in the FRED database
-    fprintf('Connecting to the St. Louis Federal Reserve database (FRED) ...\n');
-	% FRED time series to be used for our analysis
-    Series = {'GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10'};
-    try
-        c = fred('https://research.stlouisfed.org/fred2/');
-        d = fetch(c,Series);
-        close(c)
-        F=struct;
-        for j=1:size(d,2)
-            % create dates
-            switch strtrim(d(j).Frequency)
-                case {'Daily','Daily, 7-Day'}
-                    dates=d(j).Data(:,1);
-                case 'Monthly'
-                    dates=mm(year(d(j).Data(1)),month(d(j).Data(1)));
-                case 'Quarterly'
-                    dates=qq(year(d(j).Data(1)),(month(d(j).Data(1))+2)/3);
-                otherwise
-                    error('unknown freq: %s',d(j).Frequency)
-            end
-            c=evalc('disp(d(j))'); % comment
-            F.(strtrim(d(j).SeriesID))=tseries(dates,d(j).Data(:,2),c);
+% Load data from FRED and convert to quarterly periodicity
+% Note that Dates are start-of-period Dates in the FRED database
+fprintf('Connecting to the St. Louis Federal Reserve database (FRED) ...\n');
+% FRED time series to be used for our analysis
+Series = {'GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10'};
+try
+    c = fred('https://research.stlouisfed.org/fred2/');
+    d = fetch(c,Series);
+    close(c)
+    F=struct;
+    for j=1:size(d,2)
+        % create dates
+        switch strtrim(d(j).Frequency)
+            case {'Daily','Daily, 7-Day'}
+                dates=d(j).Data(:,1);
+            case 'Monthly'
+                dates=mm(year(d(j).Data(1)),month(d(j).Data(1)));
+            case 'Quarterly'
+                dates=qq(year(d(j).Data(1)),(month(d(j).Data(1))+2)/3);
+            otherwise
+                error('unknown freq: %s',d(j).Frequency)
         end
-        clear c d j dates
-        disp('FRED Database');
-        F %#ok<NOPTS>
-    catch E
-		% Case with no internet connection
-        warning(E.message)
-		fprintf('Will use data from CSV file.\n');
+        c=evalc('disp(d(j))'); % comment
+        F.(strtrim(d(j).SeriesID))=tseries(dates,d(j).Data(:,2),c);
     end
+    clear c d j dates
+    disp('FRED Database');
+    F %#ok<NOPTS>
+catch E
+    % Case with no internet connection
+    warning(E.message)
+    fprintf('Will use data from CSV file.\n');
 end
 
 %% Other data sources
@@ -82,10 +79,10 @@ end
 url = 'http://www.frbsf.org/economic-research/files/';
 fname = 'quarterly_tfp.xls';
 fname = websave([tempdir fname],[url fname]);
-[data,dates] = xlsread(fname,'quarterly','A3:L300');
-dates = str2dat(dates,'dateFormat=','YYYY:%QP','freq=',4);
-F.ALPHA = tseries(dates,data(:,10));
-F.DTFP = tseries(dates,data(:,11));
+data = xlsread(fname,'quarterly');
+T = find(isnan(data(:,10)),1,'last');
+F.ALPHA = tseries(qq(1947,1),data(1:T,10));
+F.DTFP = tseries(qq(1947,1),data(1:T,11));
 
 % The 10-year Inflation Expectations series from the Survey of Professional
 % Forecasters is made available by the Federal Reserve Bank of Philadelphia,
@@ -95,14 +92,14 @@ F.DTFP = tseries(dates,data(:,11));
 url = 'https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/';
 fname = 'inflation.xls';
 fname = websave([tempdir fname],[url fname]);
-data = xlsread(fname,'A2:E200');
+data = xlsread(fname);
 dates = qq(data(:,1),data(:,2));
 F.INFCPI10YR = tseries(dates,data(:,5));
 fname = 'additional-cpie10.xls';
 fname = websave([tempdir fname],[url fname]);
-[data,dates] = xlsread(fname,'A15:D61');
-dates = str2dat(dates(:,1),'dateFormat=','YYYY:P','freq=',4);
-F.INFCPI10YR(dates) = data(:,3);
+[data,dates] = xlsread(fname);
+dates = str2dat(dates(2:49,1),'dateFormat=','YYYY:P','freq=',4);
+F.INFCPI10YR(dates) = data(1:48,3);
 
 % The 10-year Treasury Yield (zero-coupon, continuously compounded) series
 % is made available by the Board of Governors of the Federal Reserve System,
@@ -212,7 +209,7 @@ ftitle('U.S. Data for FRBNY Model');
 
 % Tullett Prebon series start at 2014Q3
 v={'M111F3M','M111F6M','M111F9M','M111FWM','M111FFM','M111FGM','M111FOM','M111FBM','M111FEH','M111FIH','M111FRH','M111F3Y','M111F9S'};
-H = haverdata('INTDAILY',v);
+H = import_haver('\\wahaverdb\DLX\DATA\','INTDAILY',v);
 H = dbfun(@(x) convert(x,4,'method=','last'),H);
 ois = struct;
 ois.obs_ois1 = convert(H.(v{1}),4,'method=','last');
@@ -222,7 +219,7 @@ end
 ois = dbfun(@(x) x/4,ois);
 
 % Reuters series start at 2003Q3, but Haver is missing 15-month, 18-month and 21-month OIS rates
-H = haverdata('INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2'});
+H = import_haver('\\wahaverdb\DLX\DATA\','INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2'});
 H = dbfun(@(x) convert(x,4,'method=','last'),H);
 R.obs_ois1 = convert(H.T111W3M,4,'method=','last');
 R.obs_ois2 = convert(H.T111W6M,4,'method=','last')*2-R.obs_ois1;
@@ -247,7 +244,7 @@ clear ois_data dates
 ois__ = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 ois__ = dbfun(@(x) x/4,ois__);
 
-dbplot(ois&ois_&ois__)
+dbplot(ois&ois_&ois__);
 
 %% Save Data for Future Use
 %

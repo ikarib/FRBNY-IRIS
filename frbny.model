@@ -549,67 +549,67 @@ E_R = movavg(R{1},40) !! E_R = R;
 !measurement_equations
 'Output Growth (Bureau of Economic Analysis) - Quarterly!'
 !if linear
-    obs_gdp = diff(y) + z + 100*(exp(zstar)-1);
+    obs_gdp = diff(y) + z;
 !else
     obs_gdp = difflog(y) + z - $z + 100*(exp($z)-1);
 !end
 'Hours Worked (Bureau of Labor Statistics)'
 !if linear
-    obs_hours = L + Lmean;
+    obs_hours = L;
 !else
     obs_hours = log(L/$L) + Lmean;
 !end
 'Labor Share/Real Wage Growth (Bureau of Labor Statistics)'
 !if linear
-    obs_wages = diff(w) + z + 100*(exp(zstar)-1);
+    obs_wages = diff(w) + z;
 !else
     obs_wages = difflog(w) + z - $z + 100*(exp($z)-1);
 !end
 'Inflation (GDP Deflator) (Bureau of Economic Analysis)'
 !if linear
-    obs_gdpdeflator = gamm_gdpdef*pi + gdpdef + 100*(pistar-1) + del_gdpdef;
+    obs_gdpdeflator = gamm_gdpdef*pi + gdpdef;
 !else
     obs_gdpdeflator = gamm_gdpdef*log(pi/$pi) + gdpdef + 100*($pi-1) + del_gdpdef;
 !end
 'Inflation (Core PCE) (Bureau of Economic Analysis)'
 !if linear
-    obs_corepce = pi + pce + 100*(pistar-1);
+    obs_corepce = pi + pce;
 !else
     obs_corepce = log(pi/$pi) + pce + 100*($pi-1);
 !end
 'Nominal interest rate/Federal Funds Rate (Board of Governors of the Federal Reserve System)'
 !if linear
-    obs_nominalrate = R + Rstarn;
+    obs_nominalrate = R;
 !else
     obs_nominalrate = log(R/$R) + 100*($R-1);
 !end
 'Consumption Growth (Bureau of Economic Analysis)'
 !if linear
-    obs_consumption = diff(c) + z + 100*(exp(zstar)-1);
+    obs_consumption = diff(c) + z;
 !else
     obs_consumption = difflog(c) + z - $z + 100*(exp($z)-1);
 !end
 'Investment Growth (Bureau of Economic Analysis)'
 !if linear
-    obs_investment = diff(i) + z + 100*(exp(zstar)-1);
+    obs_investment = diff(i) + z;
 !else
     obs_investment = difflog(i) + z - $z + 100*(exp($z)-1);
 !end
 'Spread (Baa) (Board of Governors of the Federal Reserve System)'
 !if linear
-    obs_spread = spread + b + 100*log(sprd);
+    obs_spread = spread + b;
 !else
     obs_spread = log(spread/$spread) + b + 100*log($spread);
 !end
 '10-year Inflation Expectations (Federal Reserve Bank of Philadelphia)'
 !if linear
-    obs_longinflation = E_pi + 100*(pistar-1);
+    obs_longinflation = E_pi;
 !else
     obs_longinflation = log(E_pi/$pi) + 100*($pi-1);
 !end
 '10-year Interest Rate (Board of Governors of the Federal Reserve System)'
 !if linear
-    obs_longrate = E_R + lr + Rstarn;
+    obs_longrate = E_R + lr;
 !else
     obs_longrate = log(E_R/$R) + lr + 100*($R-1);
 !end
@@ -622,9 +622,26 @@ E_R = movavg(R{1},40) !! E_R = R;
 !for$[1:nant]$!do
     'Expected FFR derived from OIS quotes (BCFF survey)'
     !if linear
-        obs_ois? = E_R? + Rstarn;
+        obs_ois? = E_R?;
     !else
         obs_ois? = log(E_R?/$R) + 100*($R-1);
+    !end
+!end
+!if linear
+!dtrends
+    obs_gdp += 100*(exp(zstar)-1);
+    obs_hours += Lmean;
+    obs_wages += 100*(exp(zstar)-1);
+    obs_gdpdeflator += 100*(pistar-1) + del_gdpdef;
+    obs_corepce += 100*(pistar-1);
+    obs_nominalrate += Rstarn;
+    obs_consumption += 100*(exp(zstar)-1);
+    obs_investment += 100*(exp(zstar)-1);
+    obs_spread += 100*log(sprd);
+    obs_longinflation += 100*(pistar-1);
+    obs_longrate += Rstarn;
+    !for$[1:nant]$!do
+        obs_ois? += Rstarn;
     !end
 !end
 !reporting_equations

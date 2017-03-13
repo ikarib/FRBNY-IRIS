@@ -12,7 +12,6 @@
 
 clear; clc; close all
 irisrequired 20170224
-%#ok<*NOPTS>
 
 %% Load Solved Model Object and Historical Database
 %
@@ -24,7 +23,7 @@ load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-reoptimize = 0;
+reoptimize = 0; %#ok<*UNRCH>
 if reoptimize
     init = get(m,'parameters');
 else
@@ -57,15 +56,20 @@ ftitle(h.figure,'Prior Distributions');
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
-J = struct;
-for v=sprintfc('std_rm_sh%d',1:o.nant)
-    J.(v{1})=tseries(startHist:qq(2008,3),0);
+if reoptimize
+    J = struct;
+    for v=sprintfc('std_rm_sh%d',1:o.nant)
+        J.(v{1})=tseries(startHist:qq(2008,3),0);
+    end
+    filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
+    optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',true,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
+    parpool(numel(fieldnames(E)))
+    [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty');
+    info = information(pos); % more accurate than IRIS
+else
+    load estimate_params pos mest info
 end
-filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-optimSet = optimset('Algorithm','interior-point','Display','iter','TolFun',1e-16,'MaxFunEvals',20000,'UseParallel',false);
-tic
-[est,pos,C,H,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'sstate=',true,'nosolution=','penalty','optimiser=',{@knitronlp,'knitronlp.opt'});
-toc
+pos.InitProposalCov = inv(info);
 
 %% Print Estimation Results
 disp('Point estimates');
@@ -95,7 +99,7 @@ legend('Prior Density','Starting Value','Posterior Mode','Lower Bound','Upper Bo
 % optimisation routine.
 
 plist = fieldnames(E);
-std = sqrt(diag(C));
+std = sqrt(diag(pos.InitProposalCov));
 disp('Std deviations of parameter estimates');
 [char(plist), num2str(std,': %-g') ]
 
@@ -141,7 +145,7 @@ plotneigh(n,'linkaxes=',true,'subplot=',[4,7], ...
 % option `'targetAR'` in `arwm`), the covariance of the proposal
 % distribution is gradually adapted to achieve this target.
 
-N = 1000
+N = 200000
 
 tic;
 % [theta,logpost,ar] = arwm(pos,N, ...
@@ -173,7 +177,7 @@ legend('Prior Density','Posterior Mode','Posterior Density', ...
 
 %% Save Model Object with Estimated Parameters
 
-save estimate_params.mat est mest o pos E theta logpost;
+save estimate_params.mat o mest est pos theta logpost
 
 %% Help on IRIS Functions Used in This File
 %

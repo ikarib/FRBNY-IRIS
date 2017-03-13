@@ -22,7 +22,7 @@ dat2str([startHist,endHist])
 %% Load the raw series from Haver Analaytics
 fprintf('Connecting to the Haver Analytics database ...\n');
 try
-    H = import_haver('\\wahaverdb\DLX\DATA\', ...
+    H = feed.haver('\\wahaverdb\DLX\DATA\', ...
         'USECON',{'GDP','C','F','JGDP','JCXFE','LN16N','FBAA','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE'},...
         'DAILY',{'FFED','FYCCZA','FTPZAC'},...
         'SURVEYS','ASACX10');
@@ -37,32 +37,9 @@ catch E
 end
 
 %% Retrieve the raw series from FRED, Federal Reserve Bank of St. Louis
-% Load data from FRED and convert to quarterly periodicity
-% Note that Dates are start-of-period Dates in the FRED database
 fprintf('Connecting to the St. Louis Federal Reserve database (FRED) ...\n');
-% FRED time series to be used for our analysis
-Series = {'GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10'};
 try
-    c = fred('https://research.stlouisfed.org/fred2/');
-    d = fetch(c,Series);
-    close(c)
-    F=struct;
-    for j=1:size(d,2)
-        % create dates
-        switch strtrim(d(j).Frequency)
-            case {'Daily','Daily, 7-Day'}
-                dates=d(j).Data(:,1);
-            case 'Monthly'
-                dates=mm(year(d(j).Data(1)),month(d(j).Data(1)));
-            case 'Quarterly'
-                dates=qq(year(d(j).Data(1)),(month(d(j).Data(1))+2)/3);
-            otherwise
-                error('unknown freq: %s',d(j).Frequency)
-        end
-        c=evalc('disp(d(j))'); % comment
-        F.(strtrim(d(j).SeriesID))=tseries(dates,d(j).Data(:,2),c);
-    end
-    clear c d j dates
+    F = feed.fred('GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10');
     disp('FRED Database');
     F %#ok<NOPTS>
 catch E
@@ -131,12 +108,12 @@ clear MA_pop
 
 %% Create Model Consistent Variable Names
 %
-% Create a new database with model-consistent measurement variable names.
+% Create a new database with model-consistent measurement variable names
 
 % Output growth (log approximation quarterly)
 h.obs_gdp = 100*diff(log(H.GDP/H.JGDP/H.POP));
 f.obs_gdp = 100*diff(log(F.GDP/F.GDPCTPI/F.POP));
-% Employment/Hours per capita (log hours per capita)
+% Employment/Hours per capita (log hours per capita), quarterly
 h.obs_hours = 100*log(3*convert(H.LRPRIVA*H.LE,4)/100/H.POP);
 f.obs_hours = 100*log(3*convert(F.AWHNONAG*F.CE16OV,4)/100/F.POP);
 % Real Wage Growth
@@ -187,7 +164,7 @@ d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','da
 % third input argument.
 
 dbplot(d&h&f,Inf, ...
-	{ ...
+    { ...
     ' "Output Growth" obs_gdp ', ...
     ' "Hours Worked" obs_hours ', ...
     ' "Real Wage Growth" obs_wages ', ...
@@ -209,42 +186,47 @@ ftitle('U.S. Data for FRBNY Model');
 
 % Tullett Prebon series start at 2014Q3
 v={'M111F3M','M111F6M','M111F9M','M111FWM','M111FFM','M111FGM','M111FOM','M111FBM','M111FEH','M111FIH','M111FRH','M111F3Y','M111F9S'};
-H = import_haver('\\wahaverdb\DLX\DATA\','INTDAILY',v);
+H = feed.haver('\\wahaverdb\DLX\DATA\','INTDAILY',v);
 H = dbfun(@(x) convert(x,4,'method=','last'),H);
-ois = struct;
-ois.obs_ois1 = convert(H.(v{1}),4,'method=','last');
+ois_tp = struct;
+ois_tp.obs_ois1 = H.(v{1});
 for t=2:numel(v)
-    ois.(sprintf('obs_ois%d',t)) = convert(H.(v{t})*t-H.(v{t-1})*(t-1),4,'method=','last');
+    ois_tp.(sprintf('obs_ois%d',t)) = H.(v{t})*t-H.(v{t-1})*(t-1);
 end
-ois = dbfun(@(x) x/4,ois);
+ois_tp = dbfun(@(x) x/4,ois_tp);
 
 % Reuters series start at 2003Q3, but Haver is missing 15-month, 18-month and 21-month OIS rates
-H = import_haver('\\wahaverdb\DLX\DATA\','INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2'});
+H = feed.haver('\\wahaverdb\DLX\DATA\','INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2'});
 H = dbfun(@(x) convert(x,4,'method=','last'),H);
-R.obs_ois1 = convert(H.T111W3M,4,'method=','last');
-R.obs_ois2 = convert(H.T111W6M,4,'method=','last')*2-R.obs_ois1;
-R.obs_ois3 = convert(H.T111W9M,4,'method=','last')*3-R.obs_ois1-R.obs_ois2;
-R.obs_ois4 = convert(H.T111W1,4,'method=','last')*4-R.obs_ois1-R.obs_ois2-R.obs_ois3;
-R.obs_ois8 = (convert(H.T111W2,4,'method=','last')*8-R.obs_ois1-R.obs_ois2-R.obs_ois3-R.obs_ois4)/4;
-R = dbfun(@(x) x/4,R);
+ois_r = struct;
+ois_r.obs_ois1 = convert(H.T111W3M,4,'method=','last');
+ois_r.obs_ois2 = convert(H.T111W6M,4,'method=','last')*2-ois_r.obs_ois1;
+ois_r.obs_ois3 = convert(H.T111W9M,4,'method=','last')*3-ois_r.obs_ois1-ois_r.obs_ois2;
+ois_r.obs_ois4 = convert(H.T111W1,4,'method=','last')*4-ois_r.obs_ois1-ois_r.obs_ois2-ois_r.obs_ois3;
+ois_r.obs_ois8 = (convert(H.T111W2,4,'method=','last')*8-ois_r.obs_ois1-ois_r.obs_ois2-ois_r.obs_ois3-ois_r.obs_ois4)/4;
+ois_r = dbfun(@(x) x/4,ois_r);
 
 % Bloomberg OIS rates
+d = feed.bloomberg({'MSFT US Equity','IBM US Equity'},{'LAST_PRICE';'OPEN'},'1/1/12','12/31/12','monthly');
+ois_blp = feed.bloomberg({'USSOC Curncy','USSOF Curncy','USSOI Curncy','USSO1 Curncy','USSO1C Curncy','USSO1F Curncy','USSO1I Curncy','USSO2 Curncy','USSO2C Curncy','USSO2F Curncy','USSO2I Curncy','USSO3 Curncy','USSO3C Curncy'},'PX_LAST',0,today,'quarterly');
+
 [ois_data,dates] = xlsread('OIS_Bloomberg.xlsx','A4:I70');
 dates = str2dat(dates,'dateFormat=','DD/MM/YYYY','freq=',4)';
-ois_ = struct;
-ois_.obs_ois1 = tseries(dates,ois_data(:,1));
+ois_b = struct;
+ois_b.obs_ois1 = tseries(dates,ois_data(:,1));
 for t=2:8
-    ois_.(sprintf('obs_ois%d',t)) = tseries(dates,ois_data(:,t)*t-ois_data(:,t-1)*(t-1));
+    ois_b.(sprintf('obs_ois%d',t)) = tseries(dates,ois_data(:,t)*t-ois_data(:,t-1)*(t-1));
 end
-ois_ = dbfun(@(x) x/4,ois_);
-% ois_ = dbclip(ois_,qq(2008,4):endHist);
 clear ois_data dates
+ois_b = dbfun(@(x) x/4,ois_b);
+% ois_b = dbclip(ois_b,qq(2008,4):endHist);
 
 % original CSV file
-ois__ = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
-ois__ = dbfun(@(x) x/4,ois__);
+ois = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+ois = dbfun(@(x) x/4,ois);
 
-dbplot(ois&ois_&ois__);
+dbplot(ois_tp&ois_r&ois_b&ois);
+legend('Tullett Prebon','Reuters','Bloomberg','CSV')
 
 %% Save Data for Future Use
 %

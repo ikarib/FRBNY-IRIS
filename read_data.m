@@ -207,25 +207,34 @@ ois_r.obs_ois8 = (convert(H.T111W2,4,'method=','last')*8-ois_r.obs_ois1-ois_r.ob
 ois_r = dbfun(@(x) x/4,ois_r);
 
 % Bloomberg OIS rates
-d = feed.bloomberg({'MSFT US Equity','IBM US Equity'},{'LAST_PRICE';'OPEN'},'1/1/12','12/31/12','monthly');
-ois_blp = feed.bloomberg({'USSOC Curncy','USSOF Curncy','USSOI Curncy','USSO1 Curncy','USSO1C Curncy','USSO1F Curncy','USSO1I Curncy','USSO2 Curncy','USSO2C Curncy','USSO2F Curncy','USSO2I Curncy','USSO3 Curncy','USSO3C Curncy'},'PX_LAST',0,today,'quarterly');
+ois_data = feed.bloomberg({'USSOC Curncy','USSOF Curncy','USSOI Curncy','USSO1 Curncy','USSO1C Curncy','USSO1F Curncy','USSO1I Curncy','USSO2 Curncy','USSO2C Curncy','USSO2F Curncy','USSO2I Curncy','USSO3 Curncy','USSO3C Curncy'},'PX_LAST',0,today,'quarterly');
+sec = fieldnames(ois_data);
+ois_blp = struct;
+ois_blp.obs_ois1 = ois_data.(sec{1});
+for t=2:numel(sec)
+    ois_blp.(sprintf('obs_ois%d',t)) = ois_data.(sec{t})*t-ois_data.(sec{t-1})*(t-1);
+end
+clear ois_data sec
+ois_blp = dbfun(@(x) x/4,ois_blp);
+% ois_blp = dbclip(ois_blp,qq(2008,4):endHist);
 
 [ois_data,dates] = xlsread('OIS_Bloomberg.xlsx','A4:I70');
 dates = str2dat(dates,'dateFormat=','DD/MM/YYYY','freq=',4)';
-ois_b = struct;
-ois_b.obs_ois1 = tseries(dates,ois_data(:,1));
+ois_blp_ = struct;
+ois_blp_.obs_ois1 = tseries(dates,ois_data(:,1));
 for t=2:8
-    ois_b.(sprintf('obs_ois%d',t)) = tseries(dates,ois_data(:,t)*t-ois_data(:,t-1)*(t-1));
+    ois_blp_.(sprintf('obs_ois%d',t)) = tseries(dates,ois_data(:,t)*t-ois_data(:,t-1)*(t-1));
 end
 clear ois_data dates
-ois_b = dbfun(@(x) x/4,ois_b);
-% ois_b = dbclip(ois_b,qq(2008,4):endHist);
+ois_blp_ = dbfun(@(x) x/4,ois_blp_);
+maxabs(ois_blp,ois_blp_)
+% ois_blp = dbclip(ois_blp,qq(2008,4):endHist);
 
 % original CSV file
 ois = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
 ois = dbfun(@(x) x/4,ois);
 
-dbplot(ois_tp&ois_r&ois_b&ois);
+dbplot(ois_tp&ois_r&ois_b&ois,qq(2008,4):endHist);
 legend('Tullett Prebon','Reuters','Bloomberg','CSV')
 
 %% Save Data for Future Use
@@ -233,7 +242,7 @@ legend('Tullett Prebon','Reuters','Bloomberg','CSV')
 % Save the final database and the dates in a mat-file (binary file) for
 % future use.
 
-d = dbmerge(d,ois__);
+d = dbmerge(d,ois);
 
 save read_data.mat d startHist endHist;
 

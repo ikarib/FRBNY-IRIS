@@ -15,7 +15,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20170224
+irisrequired 20170320
 
 %% Load Posterior Simulator Object
 %

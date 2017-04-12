@@ -11,7 +11,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20170224
+irisrequired 20170320
 
 %% Load Solved Model Object and Historical Database
 %
@@ -63,13 +63,14 @@ if reoptimize
     end
     filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
     optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',true,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
-    parpool(numel(fieldnames(E)))
+%     parpool(numel(fieldnames(E)))
     [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty');
     info = information(pos); % more accurate than IRIS
+    pos.InitProposalCov = inv(info);
+    save estimate_params est pos mest o
 else
-    load estimate_params pos mest info
+    load estimate_params pos mest
 end
-pos.InitProposalCov = inv(info);
 
 %% Print Estimation Results
 disp('Point estimates');
@@ -145,7 +146,7 @@ plotneigh(n,'linkaxes=',true,'subplot=',[4,7], ...
 % option `'targetAR'` in `arwm`), the covariance of the proposal
 % distribution is gradually adapted to achieve this target.
 
-N = 200000
+N = 1000
 
 tic;
 % [theta,logpost,ar] = arwm(pos,N, ...
@@ -177,7 +178,7 @@ legend('Prior Density','Posterior Mode','Posterior Density', ...
 
 %% Save Model Object with Estimated Parameters
 
-save estimate_params.mat o mest est pos theta logpost
+save estimate_params.mat o mest est pos theta logpost s
 
 %% Help on IRIS Functions Used in This File
 %

@@ -4,9 +4,8 @@
 % http://dx.doi.org/10.1016/B978-0-444-53683-9.00002-5
 % Equation numbers refer to section 7 and 8 of technical appendix:
 % http://sites.sas.upenn.edu/schorf/files/hb_forecasting_appendix.pdf
-% This is a model file for IRIS toolbox (iristoolbox.codeplex.com)
-% This IRIS fork is required to estimate the model:
-% https://iristoolbox.codeplex.com/SourceControl/network/forks/ikarib/IRISdev
+% This is a model file for IRIS toolbox:
+% https://github.com/IRIS-Solutions-Team/IRIS-Toolbox
 
 !parameters
 'Income share of capital !! \alpha' alp = 0.1596 % ?: Capital elasticity in the intermediate goods sector's production function (also known as the capital share).

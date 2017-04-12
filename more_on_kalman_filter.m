@@ -12,7 +12,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20170224
+irisrequired 20170320
 %#ok<*NOPTS>
 
 %% Load the estimated model object and the historical database

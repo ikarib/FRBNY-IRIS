@@ -11,7 +11,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20170224
+irisrequired 20170320
 %#ok<*EVLC> 
 
 %% Load Estimated Model Object and Historical Database
@@ -20,7 +20,7 @@ irisrequired 20170224
 % historical database created in `read_data`. Run `estimate_params` at
 % least once before running this m-file.
 
-load estimate_params.mat mest;
+load estimate_params.mat mest o;
 load read_data.mat d startHist endHist;
 
 %% Run Kalman Filter
@@ -35,7 +35,12 @@ load read_data.mat d startHist endHist;
 % Use the options `'output='`, `'meanOnly='`, `'returnStd='` and
 % `'returnMse='` to control what is reported in the output data struct.
 
-[~,f,v,~,pe,co] = filter(mest,d,startHist:endHist+10,'relative=',false,'objRange=',startHist+2:endHist);
+J = struct;
+for v=sprintfc('std_rm_sh%d',1:o.nant)
+    J.(v{1})=tseries(startHist:qq(2008,3),0);
+end
+filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
+[~,f,v,~,pe,co] = filter(mest,d,startHist:endHist+10,filterOpt);
 
 %% Plot Estimated Shocks
 %
@@ -44,15 +49,18 @@ load read_data.mat d startHist endHist;
 % throughout the historical sample.
 
 list = get(mest,'elist');
-list = setdiff(list,{'mue_sh','gamm_sh'},'stable');
+[list,ilist] = setdiff(list,['mue_sh','gamm_sh',sprintfc('rm_sh%d',3:o.nant)],'stable');
+list_title = get(mest,'eDescript');
+list_title = list_title(ilist);
 
 dbplot(f.mean,startHist:endHist,list, ...
-    'tight=',true,'zeroline=',true);
+    'tight=',true,'zeroline=',true, ...
+    'title',list_title,'DateFormat=','YY','DateTick=',qq(1960:10:2010,1));
 ftitle('Estimated shocks');
 
 dbplot(f.mean,startHist:endHist,list, ...
     'tight=',true,'zeroLine=',true,'plotfunc=',@hist, ...
-    'title',get(mest,'eDescript'));
+    'title',list_title);
 ftitle('Histograms of Estimated Transition Shocks');
 
 %% K-Step-Ahead Kalman Predictions
@@ -71,7 +79,7 @@ ftitle('Histograms of Estimated Transition Shocks');
 
 k = 8;
 
-[~,g] = filter(mest,d,startHist:endHist, ...
+[~,g] = filter(mest,d,startHist:endHist,filterOpt{:}, ...
     'output=','pred,smooth','meanOnly=',true,'ahead=',k); %?meanOnly?
 
 g %#ok<NOPTS>
@@ -108,7 +116,7 @@ f1.laf_sh(:) = 0;
 s1 = simulate(mest,f1,startHist:endHist,'anticipate=',false);
 
 figure();
-plot([s.obs_corepce,s1.obs_corepce]*4);
+dbplot(s&s1,inf,{'obs_corepce*4'});
 grid on;
 title('Core PCE Inflation, Q/Q PA');
 legend('Actual Data','Counterfactual without Cost Push Shocks');

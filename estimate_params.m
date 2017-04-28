@@ -23,7 +23,7 @@ load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-reoptimize = 0; %#ok<*UNRCH>
+reoptimize = 1; %#ok<*UNRCH>
 if reoptimize
     init = get(m,'parameters');
 else

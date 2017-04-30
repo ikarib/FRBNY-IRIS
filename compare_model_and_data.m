@@ -33,6 +33,8 @@ load read_data.mat d startHist endHist;
 % <?priordummy?>.
 
 ylist = get(mest,'yList'); %?ylist?
+nfit = sum(~isnan(db2array(d,ylist)));
+ylist = ylist(nfit>mean(nfit)); % exclude variables with missing data
 
 p = 2;
 
@@ -95,7 +97,6 @@ grfun.bottomlegend('Unrestricted VAR(2)','BVAR(2)');
 
 N = 1000;
 Y = resample(v,vdata,Inf,N,'wild=',true,'progress=',true);
-size(Y)
 
 Nv = VAR(ylist);
 Nv = estimate(Nv,Y,Inf,'order=',p);

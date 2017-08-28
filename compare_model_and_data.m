@@ -17,7 +17,7 @@ irisrequired 20170320
 %
 % Load the model object estimated in `estimate_params`, and the historical
 % database created in `read_data`. Run `estimate_params` and
-% `filter_hist_data` at least once before running this m-file.
+% `read_data` at least once before running this m-file.
 
 load estimate_params.mat mest;
 load read_data.mat d startHist endHist;
@@ -33,8 +33,6 @@ load read_data.mat d startHist endHist;
 % <?priordummy?>.
 
 ylist = get(mest,'yList'); %?ylist?
-nfit = sum(~isnan(db2array(d,ylist)));
-ylist = ylist(nfit>mean(nfit)); % exclude variables with missing data
 
 p = 2;
 

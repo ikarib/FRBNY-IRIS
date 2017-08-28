@@ -23,13 +23,7 @@ load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-reoptimize = 1; %#ok<*UNRCH>
-if reoptimize
     init = get(m,'parameters');
-else
-    load estimate_params.mat est
-    init = est;
-end
 E = priors(init,o);
 disp(E)
 
@@ -56,20 +50,21 @@ ftitle(h.figure,'Prior Distributions');
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
+reoptimize = 1; %#ok<*UNRCH>
 if reoptimize
     J = struct;
     for v=sprintfc('std_rm_sh%d',1:o.nant)
-        J.(v{1})=tseries(startHist:qq(2008,3),0);
+        J.(v{1})=tseries(startHist-1:qq(2008,3),0);
     end
     filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-    optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',true,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
+    optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',false,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
 %     parpool(numel(fieldnames(E)))
     [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty');
     info = information(pos); % more accurate than IRIS
     pos.InitProposalCov = inv(info);
     save estimate_params est pos mest o
 else
-    load estimate_params pos mest
+    load estimate_params est pos mest
 end
 
 %% Print Estimation Results
@@ -91,7 +86,11 @@ disp(get(mest,'parameters')-fields(est))
     'figure=',{'position=',get(0,'ScreenSize')}, ...
     'subplot=',[4,7]);
 ftitle(h.figure,'Prior Distributions and Posterior Modes');
-legend('Prior Density','Starting Value','Posterior Mode','Lower Bound','Upper Bound');
+for f=h.figure
+    hL = legend((f.Children(end).Children(end:-1:1)),...
+        'Prior Density','Starting Value','Posterior Mode','Lower Bound','Upper Bound');
+    set(hL,'Position', [0.35 0.95 0.3 0.02],'Units', 'normalized', 'Orientation', 'horizontal');
+end
 
 %% Covariance Matrix of Parameter Estimates
 %
@@ -132,7 +131,7 @@ plotneigh(n,'linkaxes=',true,'subplot=',[4,7], ...
 
 %% Run Metropolis Random Walk Posterior Simulator
 %
-% Run 5,000 draws from the posterior distribution using an adaptive version
+% Run 1,000 draws from the posterior distribution using an adaptive version
 % of the random-walk Metropolis algorithm. The number of draws, `N=1000`,
 % should be obviously much larger in practice (such as 100,000 or
 % 1,000,000). Use then the function `stats` to calculate some statistics of
@@ -173,8 +172,11 @@ s = stats(pos,theta,logpost)
 
 ftitle(h.figure,'Prior Distributions and Posterior Distributions'); 
 
-legend('Prior Density','Posterior Mode','Posterior Density', ...
-    'Lower Bound','Upper Bound');
+for f=h.figure
+    hL = legend((f.Children(end).Children(end:-1:1)),...
+        'Prior Density','Posterior Mode','Posterior Density','Lower Bound','Upper Bound');
+    set(hL,'Position', [0.35 0.95 0.3 0.02],'Units', 'normalized', 'Orientation', 'horizontal');
+end
 
 %% Save Model Object with Estimated Parameters
 

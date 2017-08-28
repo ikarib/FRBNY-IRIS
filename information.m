@@ -1,6 +1,5 @@
 % information is the negative of hessian of posterior
 function info=information(Pos)
-tic
 plist = Pos.ParamList;
 param = Pos.InitParam;
 n=numel(param);
@@ -34,4 +33,3 @@ fxy=f*eye(n)+fxy+triu(fxy,1)';
 fxfy=bsxfun(@plus,fx',fy);
 fxfy=triu(fxfy)+triu(fxfy,1)';
 info=(fxy-fxfy+f)./bsxfun(@times,e,e');
-toc

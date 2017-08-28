@@ -15,7 +15,7 @@ irisrequired 20170320
 
 %% Set the start and end dates for the historical series
 startHist = qq(1959,3);
-endHist = qq(2016,4);
+endHist = qq(2017,2);
 disp('Historical range');
 dat2str([startHist,endHist])
 
@@ -100,7 +100,7 @@ clear url fname data dates
 
 %% Population forecasted by Macro Advisers
 url = 'https://macroadvisers.bluematrix.com/sellside/EmailDocViewer';
-fname = '9512_86cae8f6-90a8-498a-8ade-43fa398806e7.xlsx'; % update this
+fname = '10203_9c511728-955e-40dc-ac9c-95cb0a5c3f9c.xlsx'; % Forecast Tables - Excel
 fname = websave([tempdir fname],url,'encrypt','7fc2fad0-58b0-4183-9846-9bb56bb74182','mime','xlsx','attachmentName',fname);
 data = readtable(fname,'Range','1827:1841','ReadRowNames',true,'ReadVariableNames',false);
 data(:,find(diff(data{{'Row1'},:})<0,1)+1:end) = [];
@@ -165,9 +165,9 @@ f = dbclip(f,startHist:endHist);
 disp('Database differences (Haver vs Fred)');
 maxabs(h,f)
 
-%% Save new vintage and load previous vintage from CSV file
-dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',false,'class=',false,'format=','%.16g');
-d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
+%% Save new vintage or load old vintage from CSV file
+% dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',false,'class=',false,'format=','%.16g');
+% d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date'); % data_150102
 
 %% Plot Data
 %
@@ -199,69 +199,14 @@ dbplot(f,Inf, ...
 ftitle('U.S. Data for FRBNY Model');
 
 %% Derive expected FFR from OIS quotes
-
-% Tullett Prebon series start at 2014Q3
-v={'M111F3M','M111F6M','M111F9M','M111FWM','M111FFM','M111FGM','M111FOM','M111FBM','M111FEH','M111FIH','M111FRH','M111F3Y','M111F9S'};
-H = feed.haver('\\wahaverdb\DLX\DATA\','INTDAILY',v);
-H = dbfun(@(x) convert(x,4,'method=','last'),H);
-ois_tp = struct;
-ois_tp.obs_ois1 = H.(v{1});
-for t=2:numel(v)
-    ois_tp.(sprintf('obs_ois%d',t)) = H.(v{t})*t-H.(v{t-1})*(t-1);
-end
-ois_tp = dbfun(@(x) x/4,ois_tp);
-
-% Reuters series start at 2003Q3, but Haver is missing 15-month, 18-month and 21-month OIS rates
-H = feed.haver('\\wahaverdb\DLX\DATA\','INTDAILY',{'T111W3M','T111W6M','T111W9M','T111W1','T111W2','T111W3'});
-H = dbfun(@(x) convert(x,4,'method=','last'),H);
-ois_r = struct;
-ois_r.obs_ois1 = convert(H.T111W3M,4,'method=','last');
-ois_r.obs_ois2 = convert(H.T111W6M,4,'method=','last')*2-ois_r.obs_ois1;
-ois_r.obs_ois3 = convert(H.T111W9M,4,'method=','last')*3-ois_r.obs_ois1-ois_r.obs_ois2;
-ois_r.obs_ois4 = convert(H.T111W1,4,'method=','last')*4-ois_r.obs_ois1-ois_r.obs_ois2-ois_r.obs_ois3;
-ois_r.obs_ois8 = (convert(H.T111W2,4,'method=','last')*8-ois_r.obs_ois1-ois_r.obs_ois2-ois_r.obs_ois3-ois_r.obs_ois4)/4;
-ois_r.obs_ois12 = (convert(H.T111W3,4,'method=','last')*12-ois_r.obs_ois1-ois_r.obs_ois2-ois_r.obs_ois3-ois_r.obs_ois4)/4-ois_r.obs_ois8;
-ois_r = dbfun(@(x) x/4,ois_r);
-
-% Bloomberg OIS rates
-ois_data = feed.bloomberg({'USSOC Curncy','USSOF Curncy','USSOI Curncy','USSO1 Curncy','USSO1C Curncy','USSO1F Curncy','USSO1I Curncy','USSO2 Curncy'},'PX_LAST','quarterly');
-sec = fieldnames(ois_data);
-ois_blp = struct;
-ois_blp.obs_ois1 = ois_data.(sec{1});
-for t=2:numel(sec)
-    ois_blp.(sprintf('obs_ois%d',t)) = ois_data.(sec{t})*t-ois_data.(sec{t-1})*(t-1);
-end
-clear ois_data sec t
-ois_blp = dbfun(@(x) x/4,ois_blp);
-
-warning('off', 'MATLAB:table:ModifiedVarnames');
-data = readtable('OIS_Bloomberg.xlsx');
-warning('on', 'MATLAB:table:ModifiedVarnames');
-data(cellfun(@isempty,data.Var1),:) = [];
-dates = str2dat(data.Var1,'dateFormat=','%C%QP YYYY','freq=',4);
-data(:,1) = [];
-ois_blp = struct;
-ois_blp.obs_ois1 = tseries(dates,data{:,1});
-for t=2:8
-    ois_blp.(sprintf('obs_ois%d',t)) = tseries(dates,data{:,t}*t-data{:,t-1}*(t-1));
-end
-ois_blp = dbfun(@(x) x/4,ois_blp);
-clear data dates
-
-% original CSV file
-ois = dbload('ois_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date');
-ois = dbfun(@(x) x/4,ois);
-
-dbplot(ois_tp&ois_r&ois_blp&ois,qq(2008,4):endHist);
-legend('Tullett Prebon','Reuters','Bloomberg','CSV')
+load ois_blp
+ois_blp = dbclip(ois_blp,qq(2008,4):endHist);
+d = dbmerge(f,ois_blp);
 
 %% Save Data for Future Use
 %
 % Save the final database and the dates in a mat-file (binary file) for
 % future use.
-
-ois_blp = dbclip(ois_blp,qq(2008,4):endHist);
-d = dbmerge(f,ois_blp);
 
 save read_data.mat d startHist endHist;
 

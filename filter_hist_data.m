@@ -37,10 +37,10 @@ load read_data.mat d startHist endHist;
 
 J = struct;
 for v=sprintfc('std_rm_sh%d',1:o.nant)
-    J.(v{1})=tseries(startHist:qq(2008,3),0);
+    J.(v{1})=tseries(startHist-1:qq(2008,3),0);
 end
 filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-[~,f,v,~,pe,co] = filter(mest,d,startHist:endHist+10,filterOpt);
+[~,f] = filter(mest,d,startHist:endHist+10,filterOpt);
 
 %% Plot Estimated Shocks
 %
@@ -146,47 +146,27 @@ c.obs_corepce
 % first $n$ columns.
 
 figure();
-plotrange = qq(1990,1):endHist;
-nz=any(c.obs_gdp); nz(end-1)=0;
+plotrange = qq(2007,1):endHist;
+ftitle('Shock Decomposition');
+nz=any(c.obs_gdp)|any(c.obs_corepce)|any(c.obs_nominalrate); nz(end-1)=0;
+colormap([hsv(sum(nz)-7);0 0 0;ones(6,3)])
 
-subplot(2,3,1);
-plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end-1}]*4);
-grid on;
+subplot(1,3,1);
+barcon(plotrange,c.obs_gdp{:,nz}*4); grid on; hold all; % ,'evenlySpread=',false
+plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,'k-','LineWidth',2);
 title('Output Growth, Q/Q PA');
-legend('Actual data','Steady State + Init Cond', ...
-    'location','northWest');
-
-subplot(2,3,4);
-barcon(plotrange,c.obs_gdp{:,nz}*4);
-grid on;
-title('Contributions of shocks');
-
-subplot(2,3,2);
-plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end-1}]*4);
-grid on;
-title('Core PCE Inflation, Q/Q PA');
-legend('Actual data','Steady State + Init Cond', ...
-    'location','northWest');
-
-subplot(2,3,5);
-barcon(plotrange,c.obs_corepce{:,nz}*4);
-grid on;
-title('Contributions of shocks');
-
-subplot(2,3,3);
-plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end-1}]*4);
-grid on;
-title('Interest Rate, Q/Q PA');
-legend('Actual data','Steady State + Init Cond', ...
-    'location','northWest');
-
-subplot(2,3,6);
-barcon(plotrange,c.obs_nominalrate{:,nz}*4);
-grid on;
-title('Contributions of shocks');
-
 edescript = get(mest,'eDescript');
-legend(edescript{nz},'location','northWest');
+legend(edescript{nz},'location','southEast');
+
+subplot(1,3,2);
+barcon(plotrange,c.obs_corepce{:,nz}*4); grid on; hold all;
+plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,'k-','LineWidth',2);
+title('Core PCE Inflation, Q/Q PA');
+
+subplot(1,3,3);
+barcon(plotrange,c.obs_nominalrate{:,nz}*4); grid on; hold all;
+plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,'k-','LineWidth',2);
+title('Interest Rate, Q/Q PA');
 
 %% Plot Grouped Contributions
 %
@@ -197,50 +177,37 @@ legend(edescript{nz},'location','northWest');
 % the previous one.
 
 g = grouping(mest,'shock');
-g = addgroup(g,'Measurement','lr_sh,tfp_sh,gdpdef_sh,pce_sh');
 g = addgroup(g,'Policy','g_sh,rm_sh,pist_sh');
-g = addgroup(g,'Production','z_sh,zp_sh,mu_sh,laf_sh,law_sh');
+g = addgroup(g,'TFP','z_sh,zp_sh,mu_sh');
+g = addgroup(g,'Cost & wage push','laf_sh,law_sh');
 g = addgroup(g,'Financial','b_sh,sigw_sh,mue_sh,gamm_sh');
+g = addgroup(g,'Measurement','lr_sh,tfp_sh,gdpdef_sh,pce_sh');
+g = addgroup(g,'Anticipated MP shocks','rm_sh1,rm_sh2,rm_sh3,rm_sh4,rm_sh5,rm_sh6');
+detail(g)
 
 [cg,leg] = eval(g,c); %?groupeval?
+leg = [leg 'Actual Data (ss dev)'];
 
 figure();
+plotrange = qq(2007,1):endHist;
+ftitle('Shock Decomposition');
+colormap([hsv(numel(leg)-2); 1 1 1])
 
-subplot(2,3,1);
-plot(plotrange,[s.obs_gdp,c.obs_gdp{:,end-1}]*4);
-grid on;
+subplot(1,3,1);
+barcon(plotrange,cg.obs_gdp{:,1:end-2}*4); grid on; hold all;
+plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,'k-','LineWidth',2);
 title('Output Growth, Q/Q PA');
-legend('Actual Data','Steady state + Init Cond','location','northWest');
+legend(leg,'location','southEast');
 
-subplot(2,3,4);
-barcon(plotrange,cg.obs_gdp{:,1:end-2}*4);
-grid on;
-title('Contributions of Shocks');
-legend(leg,'location','northWest');
-
-subplot(2,3,2);
-plot(plotrange,[s.obs_corepce,c.obs_corepce{:,end-1}]*4);
-grid on;
+subplot(1,3,2);
+barcon(plotrange,cg.obs_corepce{:,1:end-2}*4); grid on; hold all;
+plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,'k-','LineWidth',2);
 title('Core PCE Inflation, Q/Q PA');
-legend('Actual Data','Steady state + Init Cond','location','northWest');
 
-subplot(2,3,5);
-barcon(plotrange,cg.obs_corepce{:,1:end-2}*4);
-grid on;
-title('Contributions of Shocks');
-legend(leg,'location','northWest');
-
-subplot(2,3,3);
-plot(plotrange,[s.obs_nominalrate,c.obs_nominalrate{:,end-1}]*4);
-grid on;
+subplot(1,3,3);
+barcon(plotrange,cg.obs_nominalrate{:,1:end-2}*4); grid on; hold all;
+plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,'k-','LineWidth',2);
 title('Interest Rate, Q/Q PA');
-legend('Actual Data','Steady state + Init Cond','location','northWest');
-
-subplot(2,3,6);
-barcon(plotrange,cg.obs_nominalrate{:,1:end-2}*4);
-grid on;
-title('Contributions of Shocks');
-legend(leg,'location','northWest');
 
 %% Save Output Data for Future Use
 %

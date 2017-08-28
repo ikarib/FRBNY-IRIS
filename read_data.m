@@ -81,6 +81,7 @@ warning('off', 'MATLAB:table:ModifiedVarnames');
 data = readtable(fname);
 warning('on', 'MATLAB:table:ModifiedVarnames');
 dates = str2dat(data.SurveyDate,'dateFormat=','YYYY:P','freq=',4);
+if iscell(data.Combined); data.Combined=str2double(data.Combined); end
 F.INFCPI10YR = [tseries(dates,data.Combined); F.INFCPI10YR];
 delete(fname)
 

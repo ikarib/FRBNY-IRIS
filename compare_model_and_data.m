@@ -33,6 +33,8 @@ load read_data.mat d startHist endHist;
 % <?priordummy?>.
 
 ylist = get(mest,'yList'); %?ylist?
+nfit = sum(~isnan(db2array(d,ylist)));
+ylist = ylist(nfit>mean(nfit)); % exclude variables with missing data
 
 p = 2;
 
@@ -206,4 +208,3 @@ grfun.ftitle('Estimated Spectral Densities');
 %    help model/xsf
 %    help grfun/bottomlegend
 %    help grfun/ftitle
-

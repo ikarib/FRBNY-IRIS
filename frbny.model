@@ -38,7 +38,7 @@
 % exogenous processes: autocorrelations
 '\rho_{g}' rho_g = 0.9863 % ?_g: AR(1) coefficient in the government spending process.
 '\eta_{gz}' eta_gz = 0.84 % ?_gz: Correlate g and z shocks.
-'\rho_{b}' rho_b = 0.941 % ?_b: AR(1) coefficient in the intertemporal preference shifter process.
+'\rho_{b}' rho_b = 0.941 % ?_b: AR(1) coefficient in the risk premium shock process.
 '\rho_{\mu}' rho_mu = 0.8735 % ?_?: AR(1) coefficient in capital adjustment cost process.
 '\rho_{z}' rho_z = 0.9446 % ?_z: AR(1) coefficient in the technology process.
 '\rho_{z^p}' rho_zp = 0.891 % ?_z_p: Autocorrelation coefficient on the z_p shock.
@@ -63,7 +63,7 @@
 '\rho_{pce}' rho_pce = 0.2320 % ?_corepce: No description available.
 % exogenous processes: standard deviations
 '\sigma_{g}' std_g_sh = 2.5230 % ?_g: The standard deviation of the government spending process.
-'\sigma_{b}' std_b_sh = 0.0292 % ?_b: The standard deviation of the intertemporal preference shifter process.
+'\sigma_{b}' std_b_sh = 0.0292 % ?_b: The standard deviation of the risk premium shock process.
 '\sigma_{\mu}' std_mu_sh = 0.4559 % ?_?: The standard deviation of the exogenous marginal efficiency of investment shock process.
 '\sigma_{z}' std_z_sh = 0.6742 % ?_z: No description available.
 '\sigma_{z^p}' std_zp_sh = 0.1662 % ?_z_p: Standard deviation of the z_p shock.
@@ -216,7 +216,7 @@ zstar,betbar
 'Neutral Technology !! \tilde{z}' ztil
 'Long run changes to productivity !! z_p' zp
 'Government spending' g
-'Intertemporal preference shifter' b
+'Risk premium shock' b
 'Marginal efficiency of investment !! \mu' mu
 'Price mark-up !! \lambda_f' laf
 'Price mark-up shock' laf1
@@ -433,7 +433,7 @@ ztil = rho_z*ztil{-1} + z_sh !! ztil = 0; % 8.2
 zp = rho_zp*zp{-1} + zp_sh !! zp = 0;
 'Government spending shock !! eq_g'
 g = rho_g*g{-1} + g_sh + eta_gz*z_sh !! g = 0; % 8.29
-'Intertemporal preference shifter shock !! eq_b'
+'Risk premium shock !! eq_b'
 b = rho_b*b{-1} + b_sh*(-sigmac*(1+h*exp(-zstar))/(1-h*exp(-zstar))) !! b = 0; % 8.30
 'Investment specific technology shock !! eq_mu'
 mu = rho_mu*mu{-1} + mu_sh !! mu = 0; % 8.31

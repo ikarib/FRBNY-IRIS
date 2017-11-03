@@ -15,7 +15,7 @@ irisrequired 20170320
 
 %% Set the start and end dates for the historical series
 startHist = qq(1959,3);
-endHist = qq(2017,2);
+endHist = qq(2017,3);
 disp('Historical range');
 dat2str([startHist,endHist])
 
@@ -54,7 +54,7 @@ end
 % http://www.frbsf.org/economic-research/total-factor-productivity-tfp/
 % (series alpha and dtfp from the linked spreadsheet).
 url = 'http://www.frbsf.org/economic-research/files/';
-fname = 'quarterly_tfp.xls';
+fname = 'quarterly_tfp.xlsx';
 fname = websave([tempdir fname],[url fname]);
 data = readtable(fname,'Sheet','quarterly','Range','A2:L300');
 data(find(cellfun(@isempty,data.date),1):end,:) = [];
@@ -101,13 +101,13 @@ clear url fname data dates
 
 %% Population forecasted by Macro Advisers
 url = 'https://macroadvisers.bluematrix.com/sellside/EmailDocViewer';
-fname = '10203_9c511728-955e-40dc-ac9c-95cb0a5c3f9c.xlsx'; % Forecast Tables - Excel
+fname = '10458_d8cbe636-5e8d-4df4-9554-983b73bfc008.xlsx'; % Forecast Tables - Excel
 fname = websave([tempdir fname],url,'encrypt','7fc2fad0-58b0-4183-9846-9bb56bb74182','mime','xlsx','attachmentName',fname);
 data = readtable(fname,'Range','1827:1841','ReadRowNames',true,'ReadVariableNames',false);
 data(:,find(diff(data{{'Row1'},:})<0,1)+1:end) = [];
 dates = qq(floor(data{{'Row1'},:}),round(rem(data{{'Row1'},:},1)*10));
 MA_pop = tseries(dates,round(data{'Working age population',:}'*1000,4));
-if maxabs(MA_pop,convert(F.CNP16OV,4))>1e-2; error('please update MA_pop'); end
+% if maxabs(MA_pop,convert(F.CNP16OV,4))>1e-2; error('Macro Advisers'' population forecast needs to be updated manually'); end
 % MA_pop = tseries(qq(2014,4),[248842.6666 249799.5291 250273.88 250785.5347 251296.4105 251808.0652 252319.7198 252831.3745 253343.8079 253855.4625 254367.8959 254879.5506 255391.984]');
 % Convert monthly population series to quarterly
 % the default conversion method is simple averaging.
@@ -120,54 +120,54 @@ clear url fname data dates MA_pop
 %
 % Create a new database with model-consistent measurement variable names
 h = struct;
-f = struct;
+d = struct;
 % Output growth (log approximation quarterly)
 h.obs_gdp = 100*diff(log(H.GDP/H.JGDP/H.POP));
-f.obs_gdp = 100*diff(log(F.GDP/F.GDPCTPI/F.POP));
+d.obs_gdp = 100*diff(log(F.GDP/F.GDPCTPI/F.POP));
 % Employment/Hours per capita (log hours per capita), quarterly
 h.obs_hours = 100*log(3*convert(H.LRPRIVA*H.LE,4)/100/H.POP);
-f.obs_hours = 100*log(3*convert(F.AWHNONAG*F.CE16OV,4)/100/F.POP);
+d.obs_hours = 100*log(3*convert(F.AWHNONAG*F.CE16OV,4)/100/F.POP);
 % Real Wage Growth
 h.obs_wages = 100*diff(log(H.LXNFC/H.JGDP));
-f.obs_wages = 100*diff(log(F.COMPNFB/F.GDPCTPI));
+d.obs_wages = 100*diff(log(F.COMPNFB/F.GDPCTPI));
 % Price Index (not Implicit Price Deflator for GDP)
 h.obs_gdpdeflator = 100*diff(log(H.JGDP));
-f.obs_gdpdeflator = 100*diff(log(F.GDPCTPI));
+d.obs_gdpdeflator = 100*diff(log(F.GDPCTPI));
 % Core PCE for models with factor structure on inflation
 h.obs_corepce = 100*diff(log(H.JCXFE));
-f.obs_corepce = 100*diff(log(F.JCXFE));
+d.obs_corepce = 100*diff(log(F.JCXFE));
 % nominal short-term interest rate (3 months) - % annualized
 h.obs_nominalrate = convert(H.FFED,4,'missing=','last')/4;
-f.obs_nominalrate = convert(F.DFF,4)/4;
+d.obs_nominalrate = convert(F.DFF,4)/4;
 % Consumption growth (log approximation quarterly annualized)
 h.obs_consumption = 100*diff(log(H.C/H.JGDP/H.POP));
-f.obs_consumption = 100*diff(log(F.PCEC/F.GDPCTPI/F.POP));
+d.obs_consumption = 100*diff(log(F.PCEC/F.GDPCTPI/F.POP));
 % Investment growth (log approximation quarterly annualized)
 h.obs_investment = 100*diff(log(H.F/H.JGDP/H.POP));
-f.obs_investment = 100*diff(log(F.FPI/F.GDPCTPI/F.POP));
+d.obs_investment = 100*diff(log(F.FPI/F.GDPCTPI/F.POP));
 % spread: BAA-10yr TBill for model with Financial Frictions
 h.obs_spread = convert(F.BAA-H.FCM10,4)/4; % H.FBAA discontinued
-f.obs_spread = convert(F.BAA-F.GS10,4)/4;
+d.obs_spread = convert(F.BAA-F.GS10,4)/4;
 % Long Term Inflation Expectations
 h.obs_longinflation = (H.ASACX10-0.5)/4;
-f.obs_longinflation = (F.INFCPI10YR-0.5)/4;
+d.obs_longinflation = (F.INFCPI10YR-0.5)/4;
 % Long rate (10-year, zero-coupon)
 h.obs_longrate = convert(H.FYCCZA-H.FTPZAC,4)/4;
-f.obs_longrate = convert(F.SVENY10-F.THREEFYTP10,4)/4;
+d.obs_longrate = convert(F.SVENY10-F.THREEFYTP10,4)/4;
 % Fernald TFP series
 h.obs_tfp = (H.TFPKQ-nanmean(H.TFPKQ))/(4*(1-H.TFPJQ));
-f.obs_tfp = (F.DTFP-nanmean(F.DTFP))/(4*(1-F.ALPHA));
+d.obs_tfp = (F.DTFP-nanmean(F.DTFP))/(4*(1-F.ALPHA));
 
 %% Clip databases
 h = dbclip(h,startHist:endHist);
-f = dbclip(f,startHist:endHist);
+d = dbclip(d,startHist:endHist);
 
 %% Compare databases
 disp('Database differences (Haver vs Fred)');
-maxabs(h,f)
+maxabs(h,d)
 
 %% Save new vintage or load old vintage from CSV file
-% dbsave(f,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',false,'class=',false,'format=','%.16g');
+% dbsave(d,['data_' datestr(now,'yymmdd') '.csv'],startHist:endHist,'comment=',false,'class=',false,'format=','%.16g');
 % d = dbload('data_150102.csv','freq=',4,'dateFormat=','YYYY-MM-DD','nameRow=','date'); % data_150102
 
 %% Plot Data
@@ -179,7 +179,7 @@ maxabs(h,f)
 USRECQ = find(F.USRECQ);
 USRECQ = mat2cell(USRECQ,diff([0;find([diff(USRECQ)>1;1])]));
 
-dbplot(f,Inf, ...
+dbplot(d,Inf, ...
     { ...
     ' "Output Growth" obs_gdp ', ...
     ' "Hours Worked" obs_hours ', ...
@@ -199,10 +199,15 @@ dbplot(f,Inf, ...
 
 ftitle('U.S. Data for FRBNY Model');
 
-%% Derive expected FFR from OIS quotes
-load ois_blp
-ois_blp = dbclip(ois_blp,qq(2008,4):endHist);
-d = dbmerge(f,ois_blp);
+%% Derive expected FFR from Bloomberg OIS quotes
+sec = {'ussoc_curncy','ussof_curncy','ussoi_curncy','usso1_curncy','usso1c_curncy','usso1f_curncy','usso1i_curncy','usso2_curncy'};
+ois = fame2iris('famemart',sec);
+ois = dbfun(@(x) convert(x,4,'method=','last')/4,ois);
+ois = dbclip(ois,qq(2008,4):endHist); % from first quarter ZLB binds to last quarter ZLB binds
+d.obs_ois1 = ois.(sec{1});
+for t=2:numel(sec)
+    d.(sprintf('obs_ois%d',t)) = ois.(sec{t})*t-ois.(sec{t-1})*(t-1);
+end
 
 %% Save Data for Future Use
 %

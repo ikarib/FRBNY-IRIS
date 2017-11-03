@@ -23,17 +23,17 @@ load read_linear_model.mat;
 load read_data.mat d startHist endHist;
 
 %% Set Up Estimation Input Structure
-    init = get(m,'parameters');
+init = get(m,'parameters');
 E = priors(init,o);
-disp(E)
+% disp(E)
 
 %% Visualise Prior Distributions
 %
 % The function `plotpp` plots the prior distributions (this function can
 % also plot the priors together with posteriors obtained from a posterior
 % simulator -- see below).
-[~,~,h] = plotpp(E,[],[],'subplot=',[4,7],'figure=',{'position=',get(0,'ScreenSize')});
-ftitle(h.figure,'Prior Distributions');
+% % [~,~,h] = plotpp(E,[],[],'subplot=',[4,7],'figure=',{'position=',get(0,'ScreenSize')});
+% ftitle(h.figure,'Prior Distributions');
 
 %% Maximise Posterior Distribution to Locate Its Mode
 %
@@ -57,9 +57,9 @@ if reoptimize
         J.(v{1})=tseries(startHist-1:qq(2008,3),0);
     end
     filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-    optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',false,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
-%     parpool(numel(fieldnames(E)))
-    [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty');
+%     optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',false,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
+    optimSet = optimset('UseParallel',true); parpool(numel(fieldnames(E)))
+    [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty','optimiser=',{@knitronlp,'knitronlp.opt'});
     info = information(pos); % more accurate than IRIS
     pos.InitProposalCov = inv(info);
     save estimate_params est pos mest o

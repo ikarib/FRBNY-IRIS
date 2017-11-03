@@ -1,0 +1,66 @@
+
+# Artelys Knitro 10.1.0 Options file
+# http://www.artelys.com/tools/knitro_doc/
+
+# Which algorithm to use.
+#   auto   = 0 = let Knitro choose the algorithm
+#   direct = 1 = use Interior (barrier) Direct algorithm
+#   cg     = 2 = use Interior (barrier) CG algorithm
+#   active = 3 = use Active Set SLQP algorithm
+#   sqp    = 4 = use Active Set SQP algorithm
+#   multi  = 5 = run multiple algorithms (perhaps in parallel)
+algorithm sqp
+
+# Specifies the verbosity of output.
+#   none         = 0 = nothing
+#   summary      = 1 = only final summary information
+#   iter_10      = 2 = information every 10 iterations is printed
+#   iter         = 3 = information at each iteration is printed
+#   iter_verbose = 4 = more verbose information at each iteration is printed
+#   iter_x       = 5 = in addition, values of solution vector (x) are printed
+#   all          = 6 = in addition, constraints (c) and multipliers (lambda)
+outlev iter_verbose  # Equivalent to setting 'Display' to 'iter'
+
+# Specifies the final relative stopping tolerance for the KKT (optimality)
+# error. Smaller values of opttol result in a higher degree of accuracy in
+# the solution with respect to optimality.
+opttol 1e-16         # Equivalent to setting 'TolFun' to 1e-16
+
+# Step size tolerance used for terminating the optimization.
+xtol 1e-16           # Equivalent to setting 'TolX' to 1e-16
+
+# Maximum number of function evaluations to allow
+# (a negative number implies no limit is imposed).
+maxfevals    -1
+
+# Where to direct the output.
+#   screen  = 0 = directed to stdout
+#   file    = 1 = directed to a file called knitro.log
+#   both    = 2 = both stdout and file called knitro.log
+outmode both
+
+# Whether to use the Knitro Tuner.
+#   off    = 0 = Knitro Tuner turned off
+#   on     = 1 = Knitro Tuner enabled
+tuner        off
+
+# Number of threads to use in parallel BLAS.
+#   choose any positive integer, or
+#   0 = determine automatically based on par_numthreads
+par_blasnumthreads 0
+
+# Whether to allow simultaneous evaluations in parallel.
+#   no   = 0 = only one thread can perform an evaluation at a time
+#   yes  = 1 = allow multi-threaded simultaneous evaluations
+par_concurrent_evals  yes
+
+# Number of threads to use in parallel linear solver.
+#   choose any positive integer, or
+#   0 = determine automatically based on par_numthreads
+par_lsnumthreads 0
+
+# Number of threads to use in parallel features (other than BLAS).
+#   choose any positive integer, or
+#   0 = value determined by OMP_NUM_THREADS environment variable
+#  -1 = run sequential version of Knitro code
+par_numthreads 4

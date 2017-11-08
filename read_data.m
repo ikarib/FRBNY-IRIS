@@ -39,7 +39,7 @@ end
 %% Retrieve the raw series from FRED, Federal Reserve Bank of St. Louis
 fprintf('Connecting to the St. Louis Federal Reserve database (FRED) ...\n');
 try
-    F = feed.fred('GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10','USRECQ');
+    F = feed.fred({'GDP','GDPCTPI','PCEC','FPI','AWHNONAG','CE16OV','CNP16OV','COMPNFB','JCXFE','DFF','BAA','GS10','THREEFYTP10','USRECQ'});
     disp('FRED Database');
     dbprintuserdata(F,'Title')
 catch E

@@ -57,11 +57,27 @@ if reoptimize
         J.(v{1})=tseries(startHist-1:qq(2008,3),0);
     end
     filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
-%     optimSet = {'TolFun',1e-16,'TolX',1e-16,'MaxFunEvals',100000,'UseParallel',false,'MaxIter=',1000,'RelLineSrchBnd',0.01,'relLineSrchBndDuration',100};
-    optimSet = optimset('UseParallel',true); parpool(numel(fieldnames(E)))
-    [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'optimSet=',optimSet,'nosolution=','penalty','optimiser=',{@knitronlp,'knitronlp.opt'});
-    info = information(pos); % more accurate than IRIS
-    pos.InitProposalCov = inv(info);
+    solver = {'fmin','Algorithm','active-set','RelLineSrchBnd',0.01,'RelLineSrchBndDuration',100};
+    solverOpt = {'UseParallel',true,'MaxFunEvals',100000,'MaxIter',1000,'TolX',1e-16,'TolFun',1e-16,'Display','iter'};
+    parpool(numel(fieldnames(E)));
+    tic
+    [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'nosolution=','penalty','EvalSPrior=',false,'solver=',[solver solverOpt]);
+    fmincon_time = toc
+    tic
+    solver = {'knitronlp','Algorithm','sqp'};
+    [est_,pos_,~,~,~] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'nosolution=','penalty','EvalSPrior=',false,'solver=',[solver solverOpt]);
+    knitro_time = toc
+
+    disp('Estimation Results (fmincon vs knitro)');
+    disp(dbfun(@(x,y) [x,y,y-x],est,est_))
+    disp('Posterior (fmincon vs knitro)');
+    disp(-[pos.InitLogPost pos_.InitLogPost])
+    disp('Elapsed Time (fmincon vs knitro)');
+    disp([fmincon_time knitro_time])
+
+return
+
+    pos.InitProposalCov = inv(information(pos));
     save estimate_params est pos mest o
 else
     load estimate_params est pos mest

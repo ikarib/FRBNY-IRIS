@@ -107,7 +107,7 @@ data = readtable(fname,'Range','1827:1841','ReadRowNames',true,'ReadVariableName
 data(:,find(diff(data{{'Row1'},:})<0,1)+1:end) = [];
 dates = qq(floor(data{{'Row1'},:}),round(rem(data{{'Row1'},:},1)*10));
 MA_pop = tseries(dates,round(data{'Working age population',:}'*1000,4));
-% if maxabs(MA_pop,convert(F.CNP16OV,4))>1e-2; error('Macro Advisers'' population forecast needs to be updated manually'); end
+if maxabs(MA_pop,convert(F.CNP16OV,4))>1e-2; warning('Macro Advisers population forecast needs to be updated manually'); end
 % MA_pop = tseries(qq(2014,4),[248842.6666 249799.5291 250273.88 250785.5347 251296.4105 251808.0652 252319.7198 252831.3745 253343.8079 253855.4625 254367.8959 254879.5506 255391.984]');
 % Convert monthly population series to quarterly
 % the default conversion method is simple averaging.

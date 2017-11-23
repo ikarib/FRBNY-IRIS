@@ -111,7 +111,7 @@ amean = struct();
 astd = struct();
 aauto = struct();
 
-[C,R] = acf(m,'order',1,'select=',v,'matrixFmt=','plain');
+[C,R] = acf(m,'order',1,'select=',v,'MatrixFormat=','plain');
 
 for i = 1 : nv
     amean.(v{i}) = m.(v{i});
@@ -163,7 +163,7 @@ end
 cstd = struct();
 cauto = struct();
 
-[C_,R_] = acf(m,'order',1,'select=',v,'matrixFmt=','plain','contributions=',true);
+[C_,R_] = acf(m,'order',1,'select=',v,'MatrixFormat=','plain','contributions=',true);
 
 for i = 1 : nv
     cstd.(v{i}) = squeeze(C_(i,i,1,:))/C(i,i,1);

@@ -55,7 +55,7 @@ list_title = list_title(ilist);
 
 dbplot(f.mean,startHist:endHist,list, ...
     'tight=',true,'zeroline=',true, ...
-    'title',list_title,'DateFormat=','YY','DateTick=',qq(1960:10:2010,1));
+    'title',list_title,'DateFormat=','yy');
 ftitle('Estimated shocks');
 
 dbplot(f.mean,startHist:endHist,list, ...
@@ -153,19 +153,19 @@ colormap([hsv(sum(nz)-7);0 0 0;ones(6,3)])
 
 subplot(1,3,1);
 barcon(plotrange,c.obs_gdp{:,nz}*4); grid on; hold all; % ,'evenlySpread=',false
-plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Output Growth, Q/Q PA');
 edescript = get(mest,'eDescript');
 legend(edescript{nz},'location','southEast');
 
 subplot(1,3,2);
 barcon(plotrange,c.obs_corepce{:,nz}*4); grid on; hold all;
-plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Core PCE Inflation, Q/Q PA');
 
 subplot(1,3,3);
 barcon(plotrange,c.obs_nominalrate{:,nz}*4); grid on; hold all;
-plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Interest Rate, Q/Q PA');
 
 %% Plot Grouped Contributions
@@ -195,18 +195,18 @@ colormap([hsv(numel(leg)-2); 1 1 1])
 
 subplot(1,3,1);
 barcon(plotrange,cg.obs_gdp{:,1:end-2}*4); grid on; hold all;
-plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_gdp-c.obs_gdp{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Output Growth, Q/Q PA');
 legend(leg,'location','southEast');
 
 subplot(1,3,2);
 barcon(plotrange,cg.obs_corepce{:,1:end-2}*4); grid on; hold all;
-plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_corepce-c.obs_corepce{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Core PCE Inflation, Q/Q PA');
 
 subplot(1,3,3);
 barcon(plotrange,cg.obs_nominalrate{:,1:end-2}*4); grid on; hold all;
-plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,'k-','LineWidth',2);
+plot(plotrange,(s.obs_nominalrate-c.obs_nominalrate{:,end-1})*4,{'k-'},'LineWidth',2);
 title('Interest Rate, Q/Q PA');
 
 %% Save Output Data for Future Use

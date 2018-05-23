@@ -23,7 +23,6 @@ irisrequired 20170320
 % When reading the model file in, create a model control parameter database,
 % include required fields and use the option 'assign=' to pass the database in.
 o = struct;
-o.kimball = true; % Kimball aggregator
 o.bgg = true; % BGG financial frictions
 o.nant = 6; % Number of anticipated policy shocks
 

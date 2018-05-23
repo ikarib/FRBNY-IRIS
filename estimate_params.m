@@ -32,7 +32,7 @@ E = priors(init,o);
 % The function `plotpp` plots the prior distributions (this function can
 % also plot the priors together with posteriors obtained from a posterior
 % simulator -- see below).
-% % [~,~,h] = plotpp(E,[],[],'subplot=',[4,7],'figure=',{'position=',get(0,'ScreenSize')});
+% [~,~,h] = plotpp(E,[],[],'subplot=',[4,7],'figure=',{'position=',get(0,'ScreenSize')});
 % ftitle(h.figure,'Prior Distributions');
 
 %% Maximise Posterior Distribution to Locate Its Mode
@@ -50,34 +50,22 @@ E = priors(init,o);
 % matrix with the contributions of the priors to the total hessian.
 % * `mest` -- Model object with the new estimated parameters.
 
-reoptimize = 1; %#ok<*UNRCH>
+reoptimize = true; parallel = false; %#ok<*UNRCH>
 if reoptimize
     J = struct;
     for v=sprintfc('std_rm_sh%d',1:o.nant)
-        J.(v{1})=tseries(startHist-1:qq(2008,3),0);
+        J.(v{1})=Series(startHist-1:qq(2008,3),0);
     end
     filterOpt = {'relative=',false,'objRange=',startHist+2:endHist,'vary=',J};
     solver = {'fmin','Algorithm','active-set','RelLineSrchBnd',0.01,'RelLineSrchBndDuration',100};
-    solverOpt = {'UseParallel',true,'MaxFunEvals',100000,'MaxIter',1000,'TolX',1e-16,'TolFun',1e-16,'Display','iter'};
-    parpool(numel(fieldnames(E)));
+%     solver = {'knitronlp','Algorithm','sqp'};
+    solverOpt = {'UseParallel',parallel,'MaxFunEvals',20000,'MaxIter',200,'TolX',1e-16,'TolFun',1e-16,'Display','iter'};
+    if parallel; parpool(numel(fieldnames(E))); end
     tic
     [est,pos,~,~,mest] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'nosolution=','penalty','EvalSPrior=',false,'solver=',[solver solverOpt]);
-    fmincon_time = toc
-    tic
-    solver = {'knitronlp','Algorithm','sqp'};
-    [est_,pos_,~,~,~] = estimate(m,d,startHist:endHist,E,'filter=',filterOpt,'nosolution=','penalty','EvalSPrior=',false,'solver=',[solver solverOpt]);
-    knitro_time = toc
+    toc
 
-    disp('Estimation Results (fmincon vs knitro)');
-    disp(dbfun(@(x,y) [x,y,y-x],est,est_))
-    disp('Posterior (fmincon vs knitro)');
-    disp(-[pos.InitLogPost pos_.InitLogPost])
-    disp('Elapsed Time (fmincon vs knitro)');
-    disp([fmincon_time knitro_time])
-
-return
-
-    pos.InitProposalCov = inv(information(pos));
+%     pos.InitProposalCov = inv(information(pos));
     save estimate_params est pos mest o
 else
     load estimate_params est pos mest
@@ -166,7 +154,7 @@ N = 1000
 tic;
 % [theta,logpost,ar] = arwm(pos,N, ...
 %     'progress=',true,'adaptScale=',2,'adaptProposalCov=',1,'burnin=',0.20);
-[theta,logpost,ar] = arwm(pos,N,'estTime=',true,'adaptScale=',0,'adaptProposalCov=',0,'burnin=',0.1,'firstPrefetch=',Inf,'initScale=',.09);
+[theta,logpost,ar] = arwm(pos,N,'Progress=',true,'adaptScale=',0,'adaptProposalCov=',0,'burnin=',0.1,'firstPrefetch=',Inf,'initScale=',.09);
 toc;
 
 disp('Final acceptance ratio');

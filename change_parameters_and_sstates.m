@@ -43,7 +43,7 @@ m.std_rm_sh = 0.3;
 % <?assignOpt?>, by using the option `assign=`.
 
 P = struct();
-P.kimball = true; P.bgg = true; P.nant = 6; % required control parameters
+P.bgg = true; P.nant = 6; % required control parameters
 P.alp = 0.16; %?paramDbase?
 P.del = 0.03;
 P.gam_ = 0.4;

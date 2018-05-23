@@ -1,7 +1,7 @@
 %% Import and Prepare Data
 %
 % Load raw data from Haver or Fred databases into databases where each series is
-% represented by a tseries (time series) object. In case with no datafeed toolbox,
+% represented by a Series (time series) object. In case with no datafeed toolbox,
 % load data from CSV files. Prepare the data to be used later with the model:
 % convert to quaterly periodicity, and create model-consistent variable names.
 
@@ -11,13 +11,7 @@
 % check the IRIS version.
 
 clear; clc; close all
-irisrequired 20170320
-
-%% Set the start and end dates for the historical series
-startHist = qq(1959,3);
-endHist = qq(2017,3);
-disp('Historical range');
-dat2str([startHist,endHist])
+iris.required(20171007)
 
 %% Load the raw series from Haver Analaytics
 fprintf('Connecting to the Haver Analytics database ...\n');
@@ -31,7 +25,7 @@ try
 catch E
     warning(E.message)
     for v={'GDP','C','F','JGDP','LN16N','FCM10','TFPJQ','TFPKQ','LXNFC','LRPRIVA','LE','JCXFE','FFED','FYCCZA','FTPZAC','ASACX10'}
-        H.(v{1})=tseries;
+        H.(v{1})=Series;
     end
     warning('Will try FRED next.')
 end
@@ -59,8 +53,8 @@ fname = websave([tempdir fname],[url fname]);
 data = readtable(fname,'Sheet','quarterly','Range','A2:L300');
 data(find(cellfun(@isempty,data.date),1):end,:) = [];
 dates = str2dat(data.date,'dateFormat=','YYYY:%QP','freq=',4);
-F.ALPHA = tseries(dates,data.alpha);
-F.DTFP = tseries(dates,data.dtfp);
+F.ALPHA = Series(dates,data.alpha);
+F.DTFP = Series(dates,data.dtfp);
 delete(fname)
 
 % The 10-year Inflation Expectations series from the Survey of Professional
@@ -69,20 +63,21 @@ delete(fname)
 % https://www.philadelphiafed.org/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/inflation-forecasts
 % (series INFCPI10YR from the linked spreadsheet).
 url = 'https://www.philadelphiafed.org/-/media/research-and-data/real-time-center/survey-of-professional-forecasters/historical-data/';
-fname = 'inflation.xls';
-fname = websave([tempdir fname],[url fname]);
+fname = 'Inflation.xlsx';
+o = weboptions('CertificateFilename','');
+fname = websave([tempdir fname],[url fname],o);
 data = readtable(fname,'TreatAsEmpty','#N/A');
 dates = qq(data.YEAR,data.QUARTER);
-F.INFCPI10YR = tseries(dates,data.INFCPI10YR);
+F.INFCPI10YR = Series(dates,data.INFCPI10YR);
 delete(fname)
-fname = 'additional-cpie10.xls';
-fname = websave([tempdir fname],[url fname]);
+fname = 'Additional-CPIE10.xlsx';
+fname = websave([tempdir fname],[url fname],o);
 warning('off', 'MATLAB:table:ModifiedVarnames');
 data = readtable(fname);
 warning('on', 'MATLAB:table:ModifiedVarnames');
 dates = str2dat(data.SurveyDate,'dateFormat=','YYYY:P','freq=',4);
 if iscell(data.Combined); data.Combined=str2double(data.Combined); end
-F.INFCPI10YR = [tseries(dates,data.Combined); F.INFCPI10YR];
+F.INFCPI10YR = [Series(dates,data.Combined); F.INFCPI10YR];
 delete(fname)
 
 % The 10-year Treasury Yield (zero-coupon, continuously compounded) series
@@ -95,26 +90,33 @@ fname = 'feds200628.xls';
 fname = websave([tempdir fname],[url fname]);
 data = readtable(fname,'Range','A10:K15000');
 dates = str2dat(data.Var1,'dateFormat=','YYYY-MM-DD','freq=',365)';
-F.SVENY10 = tseries(dates,data.SVENY10);
+F.SVENY10 = Series(dates,data.SVENY10);
 delete(fname)
 clear url fname data dates
 
 %% Population forecasted by Macro Advisers
+url = 'https://macroadviserslibrary.bluematrix.com/pages/macroadvisers/sectorDetail.jsp?id=';
+opts = weboptions('KeyName','Cookie','KeyValue','libraryuserExternal=b71105778bf3d91663d35ac2c5d90b73797499247408f8e893922f60ff19e3af538332d86183bada8399e707dfe0341964b4d638ade97766fd77b7df16d0fcdb');
+for i=1:3
+    data = webread([url num2str(i+69)],opts);
+    dates(i) = datenum(regexp(data,'<td class="text" align="right" nowrap>\n([^<]*)','tokens','once'));
+    fname(i) = regexp(data,'attachmentName=([^&]*)','tokens','once'); %#ok<*SAGROW>
+end
+[~,i]=max(dates); fname=fname{i};
 url = 'https://macroadvisers.bluematrix.com/sellside/EmailDocViewer';
-fname = '10458_d8cbe636-5e8d-4df4-9554-983b73bfc008.xlsx'; % Forecast Tables - Excel
 fname = websave([tempdir fname],url,'encrypt','7fc2fad0-58b0-4183-9846-9bb56bb74182','mime','xlsx','attachmentName',fname);
-data = readtable(fname,'Range','1827:1841','ReadRowNames',true,'ReadVariableNames',false);
+data = readtable(fname,'Range','A:A','ReadVariableNames',false);
+i=find(contains(lower(data{:,1}),'working'),1);
+data = readtable(fname,'Range',sprintf('%d:%d',i-14,i),'ReadRowNames',true,'ReadVariableNames',false);
 data(:,find(diff(data{{'Row1'},:})<0,1)+1:end) = [];
 dates = qq(floor(data{{'Row1'},:}),round(rem(data{{'Row1'},:},1)*10));
-MA_pop = tseries(dates,round(data{'Working age population',:}'*1000,4));
-if maxabs(MA_pop,convert(F.CNP16OV,4))>1e-2; warning('Macro Advisers population forecast needs to be updated manually'); end
-% MA_pop = tseries(qq(2014,4),[248842.6666 249799.5291 250273.88 250785.5347 251296.4105 251808.0652 252319.7198 252831.3745 253343.8079 253855.4625 254367.8959 254879.5506 255391.984]');
-% Convert monthly population series to quarterly
-% the default conversion method is simple averaging.
-H.POP = hpf([MA_pop;convert(H.LN16N,4)],[qq(1959,1),Inf]);
-F.POP = hpf([MA_pop;convert(F.CNP16OV,4)],[qq(1959,1),Inf]);
+pop = Series(dates,round(data{'Working age population',:}'*1000,4));
+if maxabs(pop,convert(F.CNP16OV,4))>1e-2; warning('Population forecast is incorrect.'); end
+% Convert monthly population series to quarterly (simple averaging)
+H.POP = hpf([pop;convert(H.LN16N,4)],[qq(1959,1),Inf]);
+F.POP = hpf([pop;convert(F.CNP16OV,4)],[qq(1959,1),Inf]);
 delete(fname)
-clear url fname data dates MA_pop
+clear url fname data dates pop i opts
 
 %% Create Model Consistent Variable Names
 %
@@ -158,6 +160,13 @@ d.obs_longrate = convert(F.SVENY10-F.THREEFYTP10,4)/4;
 h.obs_tfp = (H.TFPKQ-nanmean(H.TFPKQ))/(4*(1-H.TFPJQ));
 d.obs_tfp = (F.DTFP-nanmean(F.DTFP))/(4*(1-F.ALPHA));
 
+%% Set the start and end dates for the historical series
+rng = dbrange(d,'endDate=','minRange');
+startHist = qq(1959,3);
+endHist = rng(end);
+disp('Historical range');
+dat2str([startHist,endHist])
+
 %% Clip databases
 h = dbclip(h,startHist:endHist);
 d = dbclip(d,startHist:endHist);
@@ -194,16 +203,20 @@ dbplot(d,Inf, ...
     ' "10-year Interest Rate" obs_longrate ', ...
     ' "Total Factor Productivity" obs_tfp ', ...
     }, ...
-    'tight=',true, 'highlight=',USRECQ, ...
-    'DateFormat=','YY', 'DateTick=',qq(1960:5:2015,1));
+    'tight=',true, 'highlight=',USRECQ);
 
 ftitle('U.S. Data for FRBNY Model');
 
 %% Derive expected FFR from Bloomberg OIS quotes
 sec = {'ussoc_curncy','ussof_curncy','ussoi_curncy','usso1_curncy','usso1c_curncy','usso1f_curncy','usso1i_curncy','usso2_curncy'};
-ois = fame2iris('famemart',sec);
-ois = dbfun(@(x) convert(x,4,'method=','last')/4,ois);
-ois = dbclip(ois,qq(2008,4):endHist); % from first quarter ZLB binds to last quarter ZLB binds
+try
+    ois = fame2iris('famemart',sec);
+    ois = dbfun(@(x) convert(x,4,'method=','last')/4,ois);
+    ois = dbclip(ois,qq(2008,4):endHist); % from first quarter ZLB binds to last quarter ZLB binds
+    save ois ois
+catch
+    load ois
+end
 d.obs_ois1 = ois.(sec{1});
 for t=2:numel(sec)
     d.(sprintf('obs_ois%d',t)) = ois.(sec{t})*t-ois.(sec{t-1})*(t-1);
@@ -223,9 +236,9 @@ save read_data.mat d startHist endHist;
 %
 %   help dbload
 %   help dbbatch
-%   help tseris/acf
-%   help tseries/apct
-%   help tseries/convert
-%   help tseries/x12
+%   help Series/acf
+%   help Series/apct
+%   help Series/convert
+%   help Series/x12
 %   help qreport/qplot
 %   help qreportlang

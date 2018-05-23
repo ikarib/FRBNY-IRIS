@@ -11,7 +11,7 @@ function check_loglin
 
     % Check policy functions
     disp('Policy function for capital:')
-    v='kbar_s'; printeq(ml,v); printeq(m,v)
+    v='sigw'; printeq(ml,v); printeq(m,v)
 
     sspace_compare(ml,m)
     disp('Differences in impulse responses (in log10, sorted):')
@@ -66,7 +66,11 @@ function sspace_compare(m1,m2)
     [nx2,nb2]=size(T2); nf2=nx2-nb2;
     [x1,e1]=get(m1,'xVector','eVector');
     [x2]=get(m2,'xVector');
-    x2=regexprep(x2,'log\((.*)\)','$1');
+    x2=regexprep(x2,'log_(.*)','$1');
+    [xr,ix1,ix2]=setxor(x1(nf1+1:end),x2(nf2+1:end));
+    T1(nf1+ix1,:)=[]; R1(nf1+ix1,:)=[]; T1(:,ix1)=[]; x1(nf1+ix1)=[];
+    T2(nf2+ix2,:)=[]; R2(nf2+ix2,:)=[]; T2(:,ix2)=[]; x2(nf2+ix2)=[];
+%     if ~isempty(xr); fprintf('state %s is missing\n',xr{:}); end
     [x,ix1,ix2]=intersect(x1,x2);
     dif = false;
     for n=1:size(x,1)
